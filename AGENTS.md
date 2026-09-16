@@ -1,14 +1,15 @@
-# WorkLabs 工作手册
+# WorkLabs 开发者与智能体工作手册
 
-## 架构与数据规范
-- **单文件交付**：每个工具均为自包含单 HTML 文件，内嵌 CSS/JS/SVG，无本地构建流水线，依赖仅走公共 CDN。
-- **行情接口**：腾讯行情接口（JSONP，动态 `<script>` 节点加载后必须立即 `s.remove()` 卸载防内存泄漏）；腾讯分时接口（原生 Fetch 跨域）。A股原始成交额单位为万元。
-- **走势图基线**：列表中有数据时始终默认展示首项分时图，无数据时彻底隐藏；点击表格行仅用于切换聚焦，不触发折叠。
+WorkLabs 是面向高效办公与个人量化工具的免构建单文件 Web 应用仓库。每个子目录均作为一个完全独立、开箱即用的纯前端工具提供。
 
-## Git 远程同步规范
-- **代理与弹窗隔离**：Git 远程操作必须附加 `-c http.proxy=http://127.0.0.1:7890 -c credential.helper=`，避免连接超时与 GUI 弹窗阻塞。
-- **认证令牌调用**：访问令牌存储于系统环境变量（Machine 作用域）`GITHUB_TOKEN_NETSGOO`，通过 `[System.Environment]::GetEnvironmentVariable('GITHUB_TOKEN_NETSGOO', 'Machine')` 提取，严禁明文打印。
-- **标准推送命令**：
+## 关键约束
+- **交付形式**：单 HTML 文件内嵌全部资源，无本地构建，仅用公共 CDN。
+- **行情规范**：腾讯 JSONP 动态 `<script>` 节点载入后必须立即 `s.remove()` 防泄漏；A股成交额原始单位为万元。
+- **走势图基线**：有数据默认展首项，无数据彻底隐藏；点击行仅切聚焦不折叠。
+
+## Git 推送
+- **参数要求**：附加 `-c http.proxy=http://127.0.0.1:7890 -c credential.helper=` 防网络超时与弹窗阻塞。
+- **命令范式**：
   ```bash
   powershell -Command "$t = [System.Environment]::GetEnvironmentVariable('GITHUB_TOKEN_NETSGOO', 'Machine'); git -c http.proxy=http://127.0.0.1:7890 -c credential.helper= push https://${t}@github.com/netsgoo/WorkLabs.git main"
   ```
