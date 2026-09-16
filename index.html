@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkLabs · 个人日常工具集</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1220'/%3E%3Cpath d='M6 22 L12 15 L17 18 L26 8' stroke='%23f5a623' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='8' r='2.6' fill='%23f5a623'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0b1220;
+    --panel: #111a2c;
+    --panel-hover: #17243c;
+    --line: rgba(148, 173, 214, 0.14);
+    --text: #e8eefb;
+    --text-dim: #8fa3c3;
+    --text-faint: #5f7396;
+    --accent: #f5a623;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 50% -10%, #14203a 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 60px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  header { margin-bottom: 32px; }
+  .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  h1 { font-size: 24px; font-weight: 700; letter-spacing: 0.5px; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(245,166,35,.15); color: var(--accent); border: 1px solid rgba(245,166,35,.3); }
+  p.subtitle { color: var(--text-dim); font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px; margin-top: 24px; }
+  .card {
+    background: linear-gradient(180deg, var(--panel) 0%, rgba(17,26,44,.7) 100%);
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; text-decoration: none; color: inherit;
+    transition: all .2s; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .card:hover {
+    border-color: rgba(245,166,35,.5);
+    background: var(--panel-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0,0,0,.4);
+  }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .card-title { font-size: 16px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .card-desc { font-size: 13px; color: var(--text-dim); line-height: 1.6; margin-bottom: 16px; flex: 1; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--text-faint); border-top: 1px solid var(--line); padding-top: 12px; }
+  .enter-link { color: var(--accent); font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
+  footer { margin-top: 48px; text-align: center; font-size: 12px; color: var(--text-faint); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="7" fill="#16223a"/>
+        <path d="M6 22 L12 15 L17 18 L26 8" stroke="#f5a623" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="26" cy="8" r="2.6" fill="#f5a623"/>
+      </svg>
+      <h1>WorkLabs</h1>
+      <span class="badge">日常工具实验室</span>
+    </div>
+    <p class="subtitle">存放日常开发的自包含工具与独立项目，即开即用。</p>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- 项目卡片：股价提醒台 -->
+      <a class="card" href="./stock-alarm-dashboard/">
+        <div>
+          <div class="card-top">
+            <div class="card-title">
+              <span>📈 股价提醒台</span>
+            </div>
+            <span style="font-size: 10px; color: #8fa3c3; background: rgba(148,173,214,.1); padding: 1px 5px; border-radius: 4px;">A股 / 港股</span>
+          </div>
+          <div class="card-desc">
+            支持 A 股与港股多标的实时盯盘、到价声音报警、分时走势图联动展示，配置自动保存。
+          </div>
+        </div>
+        <div class="card-footer">
+          <span>stock-alarm-dashboard</span>
+          <span class="enter-link">打开应用 →</span>
+        </div>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    WorkLabs · <a href="https://github.com/netsgoo/WorkLabs" style="color: var(--text-dim); text-decoration: none;">GitHub 仓库</a>
+  </footer>
+</div>
+</body>
+</html>
