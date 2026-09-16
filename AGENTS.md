@@ -13,3 +13,7 @@ WorkLabs 是面向高效办公与个人量化工具的免构建单文件 Web 应
   ```bash
   powershell -Command "$t = [System.Environment]::GetEnvironmentVariable('GITHUB_TOKEN_NETSGOO', 'Machine'); git -c http.proxy=http://127.0.0.1:7890 -c credential.helper= push https://${t}@github.com/netsgoo/WorkLabs.git main"
   ```
+
+## 线上部署 (Cloudflare Pages)
+- **项目信息**：名称 `worklabs`，生产域名 `https://worklabs-8v7.pages.dev/`（问鼎工具为 `/ding/`）。
+- **本地发布**：`wrangler pages deploy . --project-name worklabs --branch main`
