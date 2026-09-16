@@ -1973,7 +1973,15 @@ function applySyncPayload(payload, mode = 'merge') {
   if (!payload || !Array.isArray(payload.monitors)) {
     throw new Error('无效的同步数据格式');
   }
-  const incoming = payload.monitors.map(normalizeMonitorItem).filter(Boolean);
+  const incoming = payload.monitors.map(raw => {
+    if (!raw || typeof raw !== 'object') return null;
+    return normalizeMonitorItem({
+      code: raw.code || raw.c,
+      upperTarget: raw.upperTarget != null ? raw.upperTarget : raw.u,
+      lowerTarget: raw.lowerTarget != null ? raw.lowerTarget : raw.l,
+      status: raw.status || 'watching'
+    });
+  }).filter(Boolean);
   if (!incoming.length) {
     throw new Error('口令中未包含有效监控标的');
   }
