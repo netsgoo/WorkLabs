@@ -468,17 +468,12 @@
             </div>
           </div>
 
-          <!-- 跨端极速同步 -->
+          <!-- 手机扫码同步 -->
           <div class="popover-section popover-footer">
-            <div class="popover-section-label">跨端极速同步</div>
-            <div class="popover-btns">
-              <button id="qrSyncBtn" class="btn btn-warn btn-sm" title="生成手机扫码即开的同步二维码">
-                <span>📱</span> 扫码同步
-              </button>
-              <button id="tokenSyncBtn" class="btn btn-ghost btn-sm" title="复制或粘贴文本口令进行同步">
-                <span>📋</span> 口令同步
-              </button>
-            </div>
+            <div class="popover-section-label">手机直通同步</div>
+            <button id="qrSyncBtn" class="btn btn-primary btn-sm" style="width: 100%;" title="生成手机扫码即开的同步二维码">
+              <span>📱</span> 手机扫码同步
+            </button>
           </div>
 
           <!-- 本地文件备份（完整保留） -->
@@ -597,51 +592,24 @@
   </div>
 </div>
 
-<!-- 跨端数据同步模态框（扫码直通 + 文本口令） -->
+<!-- 手机扫码同步模态框（纯扫码直通） -->
 <div class="modal-mask" id="syncModal">
   <div class="modal sync-modal-content">
     <div class="sync-modal-header">
-      <h3 id="syncModalTitle">跨端数据同步</h3>
+      <h3 id="syncModalTitle">📱 手机扫码同步</h3>
       <button id="syncModalCloseBtn" class="popover-close" aria-label="关闭同步窗口" title="关闭">✕</button>
     </div>
 
-    <!-- 选项卡切换 -->
-    <div class="sync-tabs">
-      <button class="sync-tab active" id="tabQrBtn" type="button">📱 扫码同步</button>
-      <button class="sync-tab" id="tabTokenBtn" type="button">📋 文本口令</button>
-    </div>
-
-    <!-- 扫码视图 -->
-    <div class="sync-panel active" id="panelQr">
-      <div class="qr-box-wrap">
-        <div id="qrcodeBox" class="qrcode-box">
-          <div class="qr-loading">正在生成同步二维码...</div>
-        </div>
-        <div class="qr-info">
-          <div class="qr-stat" id="qrStatText">包含 0 只监控标的</div>
-          <p class="qr-hint" id="qrEnvHint">手机使用微信或系统相机扫码，直接在手机浏览器打开并同步。</p>
-        </div>
+    <div class="qr-box-wrap">
+      <div id="qrcodeBox" class="qrcode-box">
+        <div class="qr-loading">正在生成同步二维码...</div>
       </div>
-      <div class="sync-actions-row">
-        <button id="quickCopyTokenInQrBtn" class="btn btn-ghost btn-sm" style="flex:1;">
-          <span>📋</span> 复制口令
-        </button>
-      </div>
-    </div>
-
-    <!-- 文本口令视图 -->
-    <div class="sync-panel" id="panelToken">
-      <div class="field form-row">
-        <label for="syncTokenInput">同步口令（以 ding:// 开头或粘贴配置代码）</label>
-        <textarea id="syncTokenInput" class="sync-textarea" rows="4" placeholder="在此粘贴来自电脑或他人的同步口令 ding://..."></textarea>
-      </div>
-      <div class="sync-import-btns">
-        <button id="parseTokenMergeBtn" class="btn btn-warn btn-sm" title="保留当前原有标的，仅合并追加新标的">
-          <span>➕</span> 合并追加
-        </button>
-        <button id="parseTokenOverwriteBtn" class="btn btn-primary btn-sm" title="清空当前已有标的，完全替换为口令中的配置">
-          <span>🔄</span> 覆盖替换
-        </button>
+      <div class="qr-info">
+        <div class="qr-stat" id="qrStatText">包含 0 只监控标的</div>
+        <p class="qr-hint" style="font-size: 12px; color: var(--text-dim); margin-top: 6px; line-height: 1.6;">
+          使用手机 <strong>微信</strong> 或 <strong>系统相机</strong> 扫描上方二维码<br>
+          将自动在手机浏览器打开并同步当前自选标的
+        </p>
       </div>
     </div>
   </div>
@@ -2056,142 +2024,75 @@ async function renderQrCode() {
   const token = encodeSyncToken(payload);
   
   if (els.qrStatText) {
-    els.qrStatText.textContent = '包含 ' + payload.monitors.length + ' 只监控标的与报警目标';
+    els.qrStatText.textContent = '包含 ' + payload.monitors.length + ' 只监控标的与预警目标';
   }
   
   els.qrcodeBox.innerHTML = '<div class="qr-loading">正在生成二维码...</div>';
 
-  let syncUrl = '';
+  // 无论电脑端是本地 file:// 协议打开还是网络打开，一律生成手机端可直接访问的完整网页 URL！
+  let baseUrl = '';
   if (location.protocol === 'http:' || location.protocol === 'https:') {
-    const url = new URL(location.href);
-    url.hash = 'sync=' + encodeURIComponent(token);
-    syncUrl = url.toString();
-    if (els.qrEnvHint) {
-      els.qrEnvHint.textContent = '手机使用微信或系统相机扫码，直接在手机浏览器打开并同步。';
-    }
+    baseUrl = location.origin + location.pathname;
   } else {
-    syncUrl = token;
-    if (els.qrEnvHint) {
-      els.qrEnvHint.textContent = '当前处于本地文件(file://)协议，手机无法直接跨设备读取硬盘。手机扫码可直接获得口令文本，亦可点击下方直接复制口令。';
-    }
+    baseUrl = 'https://netsgoo.github.io/WorkLabs/ding/';
   }
+  const targetUrl = new URL(baseUrl);
+  targetUrl.hash = 's=' + encodeURIComponent(token);
+  const syncUrl = targetUrl.toString();
 
   try {
     const QRCode = await loadQrCodeLib();
     els.qrcodeBox.innerHTML = '';
     new QRCode(els.qrcodeBox, {
       text: syncUrl,
-      width: 180,
-      height: 180,
+      width: 190,
+      height: 190,
       colorDark: '#0b1220',
       colorLight: '#ffffff',
       correctLevel: QRCode.CorrectLevel.M
     });
   } catch (err) {
-    els.qrcodeBox.innerHTML = '<div style="color:var(--danger); font-size:12px; padding:12px;">二维码库加载失败，请直接使用下方“复制口令”</div>';
+    els.qrcodeBox.innerHTML = '<div style="color:var(--danger); font-size:12px; padding:12px;">二维码生成失败，请检查网络连接</div>';
   }
 }
 
-function openSyncModal(tab = 'qr') {
+function openSyncModal() {
   if (!els.syncModal) return;
-  switchSyncTab(tab);
   els.syncModal.classList.add('open');
-  if (tab === 'qr') {
-    renderQrCode();
-  } else {
-    if (els.syncTokenInput) {
-      els.syncTokenInput.value = '';
-      setTimeout(() => els.syncTokenInput.focus(), 100);
-    }
-  }
+  renderQrCode();
 }
 
 function closeSyncModal() {
   if (els.syncModal) els.syncModal.classList.remove('open');
 }
 
-function switchSyncTab(tabName) {
-  if (tabName === 'qr') {
-    if (els.tabQrBtn) els.tabQrBtn.classList.add('active');
-    if (els.tabTokenBtn) els.tabTokenBtn.classList.remove('active');
-    if (els.panelQr) els.panelQr.classList.add('active');
-    if (els.panelToken) els.panelToken.classList.remove('active');
-    renderQrCode();
-  } else {
-    if (els.tabTokenBtn) els.tabTokenBtn.classList.add('active');
-    if (els.tabQrBtn) els.tabQrBtn.classList.remove('active');
-    if (els.panelToken) els.panelToken.classList.add('active');
-    if (els.panelQr) els.panelQr.classList.remove('active');
-    if (els.syncTokenInput) els.syncTokenInput.focus();
-  }
-}
-
-function copySyncToken() {
-  const payload = buildSyncPayload();
-  if (!payload.monitors.length) {
-    toast('当前无任何监控标的');
-    return;
-  }
-  const token = encodeSyncToken(payload);
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(token).then(() => {
-      toast('同步口令已复制到剪贴板，可发送到手机');
-    }).catch(() => fallbackCopy(token));
-  } else {
-    fallbackCopy(token);
-  }
-}
-
-function fallbackCopy(text) {
-  const ta = document.createElement('textarea');
-  ta.value = text;
-  ta.style.position = 'fixed';
-  ta.style.opacity = '0';
-  document.body.appendChild(ta);
-  ta.select();
-  try {
-    document.execCommand('copy');
-    toast('同步口令已复制到剪贴板，可发送到手机');
-  } catch (e) {
-    toast('复制失败，请手动选择口令复制');
-  }
-  document.body.removeChild(ta);
-}
-
-function handleImportToken(mode) {
-  const raw = (els.syncTokenInput ? els.syncTokenInput.value : '').trim();
-  if (!raw) {
-    toast('请输入或粘贴同步口令');
-    return;
-  }
-  try {
-    const payload = decodeSyncToken(raw);
-    applySyncPayload(payload, mode);
-    closeSyncModal();
-  } catch (e) {
-    toast('口令解析失败：' + (e.message || '格式错误'));
-  }
-}
-
 function checkUrlHashSync() {
-  const hash = location.hash;
-  if (!hash || !hash.includes('sync=')) return;
-  const match = hash.match(/sync=([^&]+)/);
-  if (!match) return;
+  const hash = location.hash || '';
+  const search = location.search || '';
+  let rawToken = null;
+
+  // 兼容 #s=, #sync= 以及 ?s=, ?sync=
+  const hashMatch = hash.match(/[#&](s|sync)=([^&]+)/);
+  if (hashMatch) {
+    rawToken = decodeURIComponent(hashMatch[2]);
+  } else {
+    const searchMatch = search.match(/[?&](s|sync)=([^&]+)/);
+    if (searchMatch) rawToken = decodeURIComponent(searchMatch[2]);
+  }
+
+  if (!rawToken) return;
+
   try {
-    const rawToken = decodeURIComponent(match[1]);
     const payload = decodeSyncToken(rawToken);
     if (payload && Array.isArray(payload.monitors) && payload.monitors.length > 0) {
-      setTimeout(() => {
-        const confirmMsg = '检测到来自扫码同步的自选配置（含 ' + payload.monitors.length + ' 只标的），是否立即载入？';
-        if (confirm(confirmMsg)) {
-          applySyncPayload(payload, 'merge');
-        }
-        history.replaceState(null, '', location.pathname + location.search);
-      }, 300);
+      // 自动合并载入自选股，免去任何阻断弹窗
+      applySyncPayload(payload, 'merge');
+      toast('已通过扫码自动同步 ' + payload.monitors.length + ' 只自选标的');
+      // 清除 URL 参数，保持地址栏干净
+      history.replaceState(null, '', location.pathname);
     }
   } catch (e) {
-    console.warn('URL Hash 同步解析出错', e);
+    console.warn('扫码同步解析出错', e);
   }
 }
 
@@ -2542,17 +2443,11 @@ if (els.globalPill) {
   });
 }
 
-/* 跨端数据同步相关事件绑定 */
+/* 手机扫码同步相关事件绑定 */
 if (els.qrSyncBtn) {
   els.qrSyncBtn.addEventListener('click', () => {
     toggleSettingsPopover(false);
-    openSyncModal('qr');
-  });
-}
-if (els.tokenSyncBtn) {
-  els.tokenSyncBtn.addEventListener('click', () => {
-    toggleSettingsPopover(false);
-    openSyncModal('token');
+    openSyncModal();
   });
 }
 if (els.syncModalCloseBtn) {
@@ -2562,21 +2457,6 @@ if (els.syncModal) {
   els.syncModal.addEventListener('click', e => {
     if (e.target === els.syncModal) closeSyncModal();
   });
-}
-if (els.tabQrBtn) {
-  els.tabQrBtn.addEventListener('click', () => switchSyncTab('qr'));
-}
-if (els.tabTokenBtn) {
-  els.tabTokenBtn.addEventListener('click', () => switchSyncTab('token'));
-}
-if (els.quickCopyTokenInQrBtn) {
-  els.quickCopyTokenInQrBtn.addEventListener('click', copySyncToken);
-}
-if (els.parseTokenMergeBtn) {
-  els.parseTokenMergeBtn.addEventListener('click', () => handleImportToken('merge'));
-}
-if (els.parseTokenOverwriteBtn) {
-  els.parseTokenOverwriteBtn.addEventListener('click', () => handleImportToken('overwrite'));
 }
 
 /* ================= 页面初始化启动 ================= */
