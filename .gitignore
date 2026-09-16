@@ -1,0 +1,11 @@
+# 备份与临时文件
+*.bak
+*.v2.bak
+*.tmp
+.DS_Store
+Thumbs.db
+
+# 常用开发环境与日志
+.idea/
+.vscode/
+*.log
