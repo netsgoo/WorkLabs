@@ -1264,6 +1264,7 @@
   .qp-meter-fill.shape { background: linear-gradient(90deg, #38bdf8, #818cf8); }
   .qp-meter-fill.depth { background: linear-gradient(90deg, #2dd4bf, #10b981); }
   .qp-meter-fill.tick { background: linear-gradient(90deg, #fbbf24, #f43f5e); }
+  .qp-meter-fill.trend { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
 
   .qp-stats-grid {
     display: grid;
@@ -1684,6 +1685,9 @@
       <button class="deck-mode-tab" data-mode="catalyst" id="tabModeCatalyst">
         <span>📰</span> 操盘参考资讯
       </button>
+      <a href="compass-guide.html" target="_blank" class="deck-mode-guide-link" title="查看量化博弈罗盘极简图解手册 (ELI5版)" style="margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--accent); text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(245, 166, 35, 0.08); border: 1px solid rgba(245, 166, 35, 0.25); font-weight: 500;">
+        <span>📖</span> 5分钟新手指南 ↗
+      </a>
     </div>
 
     <!-- 模态一：量化博弈罗盘与实战决策流 -->
@@ -1746,6 +1750,18 @@
                 <div class="qp-meter-fill tick" id="qpBarTick" style="width: 50%;"></div>
               </div>
             </div>
+            <div class="qp-meter-item" title="日线级别 MA5/MA10/MA20 均线排列状态。多头排列(MA5>MA10>MA20)趋势向上，空头排列趋势向下，缠绕则方向不明。">
+              <div class="qp-meter-label-row">
+                <span>日线趋势 (5/10/20日均线)</span>
+                <div style="display:flex; align-items:center; gap:5px;">
+                  <span class="qp-meter-state" id="qpStateTrend">--</span>
+                  <span class="num" id="qpScoreTrend">50</span>
+                </div>
+              </div>
+              <div class="qp-meter-bar-bg">
+                <div class="qp-meter-fill trend" id="qpBarTrend" style="width: 50%;"></div>
+              </div>
+            </div>
           </div>
           <div class="qp-stats-grid">
             <div class="qp-stat-cell" title="现价离今天所有人平均买入成本有多远。偏高易回落，跌破说明多头转弱">
@@ -1767,6 +1783,11 @@
               <span class="qp-stat-label">主动抢买占比 (外盘)</span>
               <span class="qp-stat-val num" id="qpActiveBuyRatio">--</span>
               <span class="qp-stat-hint" id="qpHintBuy">买卖平稳换手</span>
+            </div>
+            <div class="qp-stat-cell" title="MA5/MA10/MA20 日线均线数值一览（前复权收盘价）">
+              <span class="qp-stat-label">日线均线 (MA5 / MA10 / MA20)</span>
+              <span class="qp-stat-val num" id="qpMaValues" style="font-size: 11px;">--</span>
+              <span class="qp-stat-hint" id="qpHintTrend">日线数据加载中</span>
             </div>
           </div>
         </div>
@@ -2080,6 +2101,11 @@ const els = {
   qpScoreTick: document.getElementById('qpScoreTick'),
   qpBarTick: document.getElementById('qpBarTick'),
   qpStateTick: document.getElementById('qpStateTick'),
+  qpScoreTrend: document.getElementById('qpScoreTrend'),
+  qpBarTrend: document.getElementById('qpBarTrend'),
+  qpStateTrend: document.getElementById('qpStateTrend'),
+  qpMaValues: document.getElementById('qpMaValues'),
+  qpHintTrend: document.getElementById('qpHintTrend'),
   qpVwapBias: document.getElementById('qpVwapBias'),
   qpHintVwap: document.getElementById('qpHintVwap'),
   qpVolRatio: document.getElementById('qpVolRatio'),
@@ -2911,6 +2937,50 @@ const QuantCompassEngine = (function() {
   const TICK_CACHE_TTL = 10000;
   let currentMinAmount = 0;
 
+  // 日K线缓存：{ code: { timestamp, closes, ma5, ma10, ma20, latestClose } }
+  const dayKCache = new Map();
+  const DAYK_CACHE_TTL = 4 * 3600 * 1000; // 4小时过期（一个交易日只需拉1次）
+
+  async function fetchDayK(code) {
+    const cached = dayKCache.get(code);
+    if (cached && (Date.now() - cached.timestamp < DAYK_CACHE_TTL)) {
+      return cached;
+    }
+    try {
+      const fetchOptions = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+        ? { signal: AbortSignal.timeout(5000) } : {};
+      const r = await fetch(
+        'https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=' +
+        code + ',day,,,30,qfq', fetchOptions
+      );
+      const j = await r.json();
+      const node = j.data && j.data[code];
+      const days = (node && (node.qfqday || node.day)) || [];
+      if (days.length < 5) return null;
+
+      // API 格式: [日期, 开盘, 收盘, 最高, 最低, 成交量] — index[2]=收盘价(实测验证)
+      const closes = days.map(function(d) { return +d[2]; });
+      const ma = function(n) {
+        if (closes.length < n) return null;
+        var slice = closes.slice(-n);
+        return +(slice.reduce(function(a, b) { return a + b; }, 0) / n).toFixed(3);
+      };
+
+      var result = {
+        timestamp: Date.now(),
+        closes: closes,
+        ma5: ma(5),
+        ma10: ma(10),
+        ma20: ma(20),
+        latestClose: closes[closes.length - 1]
+      };
+      dayKCache.set(code, result);
+      return result;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function fetchTicks(code) {
     if (!code) return [];
     const isA = /^sh|^sz|^bj/.test(code);
@@ -2982,8 +3052,22 @@ const QuantCompassEngine = (function() {
         grade: 'NEUTRAL',
         gradeText: '数据就绪中',
         gradeBadge: 'neutral',
-        scores: { vp: 50, shape: 50, depth: 50, tick: 50, overall: 50 },
-        metrics: { biasPct: 0, volRatio: 1, imbalance: 0, buyRatio: 50, vwap: 0 },
+        scores: { vp: 50, shape: 50, depth: 50, tick: 50, trend: 50, overall: 50 },
+        states: {
+          vp: { text: '计算中', cls: 'neutral' },
+          shape: { text: '计算中', cls: 'neutral' },
+          depth: { text: '计算中', cls: 'neutral' },
+          tick: { text: '计算中', cls: 'neutral' },
+          trend: { text: '待就绪', cls: 'neutral' }
+        },
+        hints: {
+          vwap: '分时数据待载入',
+          vol: '量比数据待载入',
+          imbalance: '委比数据待载入',
+          buy: '外盘数据待载入',
+          trend: '日线数据加载中'
+        },
+        metrics: { biasPct: 0, volRatio: 1, imbalance: 0, buyRatio: 50, vwap: 0, ma5: null, ma10: null, ma20: null },
         rule: {
           code: 'M_NORMAL',
           action: 'WATCH',
@@ -3038,7 +3122,54 @@ const QuantCompassEngine = (function() {
     else tickScore += Math.round((buyRatio - 50) * 1.5);
     tickScore = Math.max(10, Math.min(95, tickScore));
 
-    const overall = Math.round(vpScore * 0.3 + shapeScore * 0.25 + depthScore * 0.2 + tickScore * 0.25);
+    // --- 第5维度：日线趋势健康度 (MA5 / MA10 / MA20) ---
+    let trendScore = 50;
+    let trendState = { text: '趋势待算', cls: 'neutral' };
+    let hintTrend = '日线数据加载中';
+    let ma5 = null, ma10 = null, ma20 = null;
+
+    const dk = dayKCache.get(code);
+    if (dk && dk.ma5 != null && dk.ma10 != null && dk.ma20 != null) {
+      ma5 = dk.ma5;
+      ma10 = dk.ma10;
+      ma20 = dk.ma20;
+      const pAboveMa5  = price >= ma5;
+      const pAboveMa10 = price >= ma10;
+      const pAboveMa20 = price >= ma20;
+      const bullAlign   = ma5 > ma10 && ma10 > ma20; // 多头排列
+      const bearAlign   = ma5 < ma10 && ma10 < ma20; // 空头排列
+
+      if (bullAlign && pAboveMa5) {
+        trendScore = 85;
+        trendState = { text: '多头排列', cls: 'up' };
+        hintTrend = 'MA5>10>20 · 顺势向上';
+      } else if (bullAlign && !pAboveMa5) {
+        trendScore = 65;
+        trendState = { text: '多头回踩', cls: 'neutral' };
+        hintTrend = '均线多头 · 踩线整理';
+      } else if (bearAlign && !pAboveMa5) {
+        trendScore = 15;
+        trendState = { text: '空头排列', cls: 'down' };
+        hintTrend = 'MA5<10<20 · 弱势探底';
+      } else if (bearAlign && pAboveMa5) {
+        trendScore = 35;
+        trendState = { text: '空头反抽', cls: 'down' };
+        hintTrend = '空头排列 · 谨防诱多';
+      } else {
+        const aboveCount = [pAboveMa5, pAboveMa10, pAboveMa20].filter(Boolean).length;
+        trendScore = 35 + aboveCount * 10;
+        trendState = { text: '均线缠绕', cls: 'neutral' };
+        hintTrend = '方向未明 · 观察突破';
+      }
+    }
+
+    const overall = Math.round(
+      vpScore * 0.25 +
+      shapeScore * 0.20 +
+      depthScore * 0.15 +
+      tickScore * 0.25 +
+      trendScore * 0.15
+    );
     let grade = 'NEUTRAL';
     let gradeText = '⚪ 震荡拉锯 (平稳别折腾)';
     let gradeBadge = 'neutral';
@@ -3096,27 +3227,53 @@ const QuantCompassEngine = (function() {
         hudText: '涨得过急偏离均价 (+' + biasPct + '%) [卖掉一半]'
       };
     } else if (price < vwap && biasPct <= -1.5 && q.changePct < 0) {
-      rule = {
-        code: '破位防守',
-        action: '坚决止损',
-        actionText: '跌破底线，果断撤退！',
-        actionLevel: 'stop',
-        title: '跌破今天全天平均买入成本线 (均线破位)',
-        desc: '现价已经下穿今天所有人买入的生命成本线，意味着今天买入的大多数人都已经浮亏被套，空方全面打压，继续下跌概率大。',
-        tactic: '小白建议：不要抱有侥幸心理逆势扛单，先撤出来保住本金，等企稳了再看！',
-        hudText: '跌破全天成本底线 (' + biasPct + '%) [果断撤退]'
-      };
+      if (trendScore >= 65) {
+        rule = {
+          code: '多头回踩',
+          action: '逢低观察',
+          actionText: '均线多头回踩，暂莫恐慌！',
+          actionLevel: 'neutral',
+          title: '日线多头排列中日内洗盘回踩',
+          desc: '虽然跌破分时均价线（偏离 ' + biasPct + '%），但日线级别呈多头排列，中短期趋势完好，多为盘中洗盘或浮筹清理。',
+          tactic: '小白建议：先看下方关键日均线支撑，只要未破日线防线可多观察，无须盲目恐慌杀跌。',
+          hudText: '多头结构日内洗盘回踩 (' + biasPct + '%) [观察企稳]'
+        };
+      } else {
+        rule = {
+          code: '破位防守',
+          action: '坚决止损',
+          actionText: '跌破底线，果断撤退！',
+          actionLevel: 'stop',
+          title: '跌破今天全天平均买入成本线 (均线破位)',
+          desc: '现价已经下穿今天所有人买入的生命成本线，意味着今天买入的大多数人都已经浮亏被套，空方全面打压，继续下跌概率大。',
+          tactic: '小白建议：不要抱有侥幸心理逆势扛单，先撤出来保住本金，等企稳了再看！',
+          hudText: '跌破全天成本底线 (' + biasPct + '%) [果断撤退]'
+        };
+      }
     } else if (volRatio >= 3.0 && q.changePct >= 2.0 && price >= vwap) {
-      rule = {
-        code: '放量主攻',
-        action: '顺势跟买',
-        actionText: '主力爆量，顺势跟进！',
-        actionLevel: 'buy',
-        title: '成交量比平时放大数倍且价格强势拉升',
-        desc: '成交热度是平时的 ' + volRatio.toFixed(1) + ' 倍，价涨量增而且稳稳站在成本线上方，有大资金真金白银进场扫货进攻。',
-        tactic: '小白建议：可以顺势少量买入或继续持股待涨，只要不跌破均线就可以一直拿着。',
-        hudText: '成交量放大 ' + volRatio.toFixed(1) + ' 倍爆量进攻 [顺势跟进]'
-      };
+      if (trendScore <= 40) {
+        rule = {
+          code: '空头反弹',
+          action: '谨慎观望',
+          actionText: '空头弱势反弹，切莫追高！',
+          actionLevel: 'neutral',
+          title: '日线空头排列下的日内放量冲高 (疑似诱多)',
+          desc: '虽然盘中量比放大到 ' + volRatio.toFixed(1) + ' 倍，但日线均线处于空头压制形态，属于典型的逆势反弹，上方套牢盘抛压沉重。',
+          tactic: '小白建议：空头大趋势下放量往往是主力拉高出货或诱多，轻仓或空仓者切忌盲目跟买，已有持仓可借机减磅。',
+          hudText: '空头压制下日内脉冲 (' + volRatio.toFixed(1) + '倍) [防范诱多]'
+        };
+      } else {
+        rule = {
+          code: '放量主攻',
+          action: '顺势跟买',
+          actionText: '主力爆量，顺势跟进！',
+          actionLevel: 'buy',
+          title: '成交量比平时放大数倍且价格强势拉升',
+          desc: '成交热度是平时的 ' + volRatio.toFixed(1) + ' 倍，价涨量增而且稳稳站在成本线上方，有大资金真金白银进场扫货进攻。',
+          tactic: '小白建议：可以顺势少量买入或继续持股待涨，只要不跌破均线就可以一直拿着。',
+          hudText: '成交量放大 ' + volRatio.toFixed(1) + ' 倍爆量进攻 [顺势跟进]'
+        };
+      }
     } else if (q.totalBidVol > q.totalAskVol * 2.5 && q.changePct < 0 && buyRatio < 45) {
       rule = {
         code: '防假托单',
@@ -3129,16 +3286,29 @@ const QuantCompassEngine = (function() {
         hudText: '警惕大托单虚假防守掩护出逃 [逢高撤离]'
       };
     } else if (q.totalAskVol > q.totalBidVol * 2.0 && price >= vwap && buyRatio >= 65) {
-      rule = {
-        code: '强势吞单',
-        action: '顺势跟买',
-        actionText: '主力扫货，强势吃单！',
-        actionLevel: 'buy',
-        title: '上方沉重卖单被主力大笔一口口吃掉',
-        desc: '上方挂满大抛单但股价不跌反涨，大资金正不计成本主动向上扫盘抢货，抛盘即将被扫光逼空大涨。',
-        tactic: '小白建议：观察上方大卖单被吃掉八九成时，可以果断小仓位跟进买入。',
-        hudText: '上方大抛单遭主力扫货吞噬 [跟买看多]'
-      };
+      if (trendScore <= 40) {
+        rule = {
+          code: '空头护盘',
+          action: '保持谨慎',
+          actionText: '空头趋势吞单，防范假突破！',
+          actionLevel: 'neutral',
+          title: '空头形态下主力主动扫盘 (持续性存疑)',
+          desc: '盘口主动吃掉卖单，但日线仍处于弱势空头压制中，突破有效性打折扣，容易冲高回落。',
+          tactic: '小白建议：空头趋势里不盲信盘口异动，等待日线站上均线企稳后再考虑介入。',
+          hudText: '空头排列下吞单异动 [观望防假突破]'
+        };
+      } else {
+        rule = {
+          code: '强势吞单',
+          action: '顺势跟买',
+          actionText: '主力扫货，强势吃单！',
+          actionLevel: 'buy',
+          title: '上方沉重卖单被主力大笔一口口吃掉',
+          desc: '上方挂满大抛单但股价不跌反涨，大资金正不计成本主动向上扫盘抢货，抛盘即将被扫光逼空大涨。',
+          tactic: '小白建议：观察上方大卖单被吃掉八九成时，可以果断小仓位跟进买入。',
+          hudText: '上方大抛单遭主力扫货吞噬 [跟买看多]'
+        };
+      }
     } else {
       rule = {
         code: '稳健持股',
@@ -3161,26 +3331,32 @@ const QuantCompassEngine = (function() {
         shape: shapeScore,
         depth: depthScore,
         tick: tickScore,
+        trend: trendScore,
         overall
       },
       states: {
         vp: vpState,
         shape: shapeState,
         depth: depthState,
-        tick: tickState
+        tick: tickState,
+        trend: trendState
       },
       hints: {
         vwap: hintVwap,
         vol: hintVol,
         imbalance: hintImbalance,
-        buy: hintBuy
+        buy: hintBuy,
+        trend: hintTrend
       },
       metrics: {
         biasPct,
         volRatio,
         imbalance,
         buyRatio,
-        vwap
+        vwap,
+        ma5,
+        ma10,
+        ma20
       },
       rule
     };
@@ -3189,7 +3365,7 @@ const QuantCompassEngine = (function() {
   function renderMicroRadar(code) {
     const q = quotes[code];
     if (!q) {
-      return '<div class="micro-radar" data-code="' + code + '" title="四维量化微雷达：V(成交量比) P(分时均价) D(五档委比) T(外盘主买)" onclick="event.stopPropagation(); focusStockChartAndQuant(\'' + code + '\')"><span class="mr-dot mr-neutral">V</span><span class="mr-dot mr-neutral">P</span><span class="mr-dot mr-neutral">D</span><span class="mr-dot mr-neutral">T</span></div>';
+      return '<div class="micro-radar" data-code="' + code + '" title="五维量化微雷达：V(成交量比) P(分时均价) D(五档委比) T(外盘主买) M(日线趋势)" onclick="event.stopPropagation(); focusStockChartAndQuant(\'' + code + '\')"><span class="mr-dot mr-neutral">V</span><span class="mr-dot mr-neutral">P</span><span class="mr-dot mr-neutral">D</span><span class="mr-dot mr-neutral">T</span><span class="mr-dot mr-neutral">M</span></div>';
     }
     const an = analyze(code, q, null);
     const m = an.metrics;
@@ -3198,23 +3374,27 @@ const QuantCompassEngine = (function() {
     const pClass = (q.price >= m.vwap) ? 'mr-up' : 'mr-down';
     const dClass = (m.imbalance >= 25) ? 'mr-up' : (m.imbalance <= -25 ? 'mr-down' : 'mr-neutral');
     const tClass = (m.buyRatio >= 58) ? 'mr-up' : (m.buyRatio <= 42 ? 'mr-down' : 'mr-neutral');
+    const mClass = an.scores.trend >= 60 ? 'mr-up' : (an.scores.trend <= 40 ? 'mr-down' : 'mr-neutral');
 
     const vTip = '【V 成交量比】' + m.volRatio.toFixed(2) + '倍 · ' + an.hints.vol;
     const pTip = '【P 分时均价】偏离均线 ' + (m.biasPct > 0 ? '+' : '') + m.biasPct + '% · ' + an.hints.vwap;
     const dTip = '【D 五档委比】委比 ' + (m.imbalance > 0 ? '+' : '') + m.imbalance + '% · ' + an.hints.imbalance;
     const tTip = '【T 资金意图】外盘抢买 ' + m.buyRatio + '% · ' + an.hints.buy;
-    const summaryTip = '四维多空状态：' + (an.gradeText || '').replace(/^[🟢🔴⚪]\s*/, '') + ' (点击展开走势图与量化罗盘)';
+    const mTip = '【M 均线趋势】' + (an.states && an.states.trend ? an.states.trend.text : '趋势待算') + ' · ' + (an.hints ? an.hints.trend : '');
+    const summaryTip = '五维多空状态：' + (an.gradeText || '').replace(/^[🟢🔴⚪]\s*/, '') + ' (点击展开走势图与量化罗盘)';
 
     return '<div class="micro-radar" data-code="' + code + '" title="' + summaryTip + '" onclick="event.stopPropagation(); focusStockChartAndQuant(\'' + code + '\')">' +
       '<span class="mr-dot ' + vClass + '" title="' + vTip + '">V</span>' +
       '<span class="mr-dot ' + pClass + '" title="' + pTip + '">P</span>' +
       '<span class="mr-dot ' + dClass + '" title="' + dTip + '">D</span>' +
       '<span class="mr-dot ' + tClass + '" title="' + tTip + '">T</span>' +
+      '<span class="mr-dot ' + mClass + '" title="' + mTip + '">M</span>' +
     '</div>';
   }
 
   return {
     fetchTicks,
+    fetchDayK,
     analyze,
     renderMicroRadar,
     getTickFilterMin: () => currentMinAmount,
@@ -3724,12 +3904,8 @@ function focusStockChartAndCatalyst(code) {
   }
 }
 
-async function renderQuantCompass(code) {
-  if (!code) return;
-  currentQuantCode = code;
-  const q = quotes[code];
-  const analysis = QuantCompassEngine.analyze(code, q, currentChartRows);
-
+function updateQuantCompassElements(analysis) {
+  if (!analysis) return;
   if (els.qpOverallGrade) {
     els.qpOverallGrade.textContent = analysis.gradeText;
     els.qpOverallGrade.className = 'qp-badge ' + analysis.gradeBadge;
@@ -3760,6 +3936,13 @@ async function renderQuantCompass(code) {
   if (els.qpStateTick && analysis.states && analysis.states.tick) {
     els.qpStateTick.textContent = analysis.states.tick.text;
     els.qpStateTick.className = 'qp-meter-state ' + analysis.states.tick.cls;
+  }
+
+  if (els.qpScoreTrend) els.qpScoreTrend.textContent = analysis.scores.trend;
+  if (els.qpBarTrend) els.qpBarTrend.style.width = analysis.scores.trend + '%';
+  if (els.qpStateTrend && analysis.states && analysis.states.trend) {
+    els.qpStateTrend.textContent = analysis.states.trend.text;
+    els.qpStateTrend.className = 'qp-meter-state ' + analysis.states.trend.cls;
   }
 
   if (els.qpVwapBias) {
@@ -3794,6 +3977,19 @@ async function renderQuantCompass(code) {
     els.qpHintBuy.textContent = analysis.hints.buy;
   }
 
+  if (els.qpMaValues) {
+    if (analysis.metrics.ma5 != null && analysis.metrics.ma10 != null && analysis.metrics.ma20 != null) {
+      els.qpMaValues.textContent = analysis.metrics.ma5.toFixed(2) + ' / ' + analysis.metrics.ma10.toFixed(2) + ' / ' + analysis.metrics.ma20.toFixed(2);
+      els.qpMaValues.className = 'qp-stat-val num';
+    } else {
+      els.qpMaValues.textContent = '数据载入中…';
+      els.qpMaValues.className = 'qp-stat-val num flat';
+    }
+  }
+  if (els.qpHintTrend && analysis.hints) {
+    els.qpHintTrend.textContent = analysis.hints.trend;
+  }
+
   // 中栏：决策指令
   if (els.qpDirectiveHero) {
     els.qpDirectiveHero.className = 'qp-directive-hero ' + analysis.rule.actionLevel;
@@ -3811,6 +4007,24 @@ async function renderQuantCompass(code) {
     const cleanTactic = (analysis.rule.tactic || '').replace(/^(实战操盘原则|实战原则|小白建议)[：:]\s*/, '');
     els.qpTacticBox.innerHTML = '<b>小白实战建议：</b>' + cleanTactic;
   }
+}
+
+async function renderQuantCompass(code) {
+  if (!code) return;
+  currentQuantCode = code;
+  const q = quotes[code];
+
+  // 异步预拉取日K前复权数据并计算均线（4小时TTL），拉取成功后无缝重算并更新UI
+  QuantCompassEngine.fetchDayK(code).then(dk => {
+    if (currentQuantCode === code && dk) {
+      const latestQ = quotes[code];
+      const re = QuantCompassEngine.analyze(code, latestQ, currentChartRows);
+      updateQuantCompassElements(re);
+    }
+  });
+
+  const analysis = QuantCompassEngine.analyze(code, q, currentChartRows);
+  updateQuantCompassElements(analysis);
 
   // 右栏：异步拉取并渲染逐笔大单
   loadAndRenderTicks(code);
@@ -4253,6 +4467,7 @@ function addMonitor() {
   toast('已添加 ' + code + ' 到实时监控');
   pollCycle();
   NewsCatalystEngine.fetchStock(code);
+  QuantCompassEngine.fetchDayK(code);
 }
 
 function stopAlarmItem(id) {
@@ -5134,13 +5349,19 @@ if (els.audioStatusPill) {
     const pClass = (q && q.price >= m.vwap) ? 'up' : 'down';
     const dClass = (m.imbalance >= 25) ? 'up' : (m.imbalance <= -25 ? 'down' : 'neutral');
     const tClass = (m.buyRatio >= 58) ? 'up' : (m.buyRatio <= 42 ? 'down' : 'neutral');
+    const mClass = an.scores.trend >= 60 ? 'up' : (an.scores.trend <= 40 ? 'down' : 'neutral');
+    const trendText = an.states && an.states.trend ? an.states.trend.text : '趋势待算';
+    const trendHint = an.hints && an.hints.trend ? an.hints.trend : '日线均线排列分析';
+
+    // 悬浮时顺便触发日K预热
+    QuantCompassEngine.fetchDayK(code);
 
     const cleanGrade = (an.gradeText || '数据就绪中').replace(/^[🟢🔴⚪]\s*/, '');
     const stockName = (q && q.name) ? q.name : code;
 
     pop.innerHTML = 
       '<div class="mr-pop-head">' +
-        '<div class="mr-pop-title"><span>🧭</span>' + stockName + ' · 四维量化微雷达</div>' +
+        '<div class="mr-pop-title"><span>🧭</span>' + stockName + ' · 五维量化微雷达</div>' +
         '<span class="mr-pop-badge ' + an.gradeBadge + '">' + cleanGrade + '</span>' +
       '</div>' +
       '<div class="mr-pop-matrix">' +
@@ -5167,6 +5388,12 @@ if (els.audioStatusPill) {
           '<div class="mr-pop-name">外盘主买</div>' +
           '<div class="mr-pop-val ' + tClass + '">' + m.buyRatio + '%</div>' +
           '<div class="mr-pop-hint">' + an.hints.buy + '</div>' +
+        '</div>' +
+        '<div class="mr-pop-row">' +
+          '<div class="mr-pop-dot ' + mClass + '">M</div>' +
+          '<div class="mr-pop-name">均线趋势</div>' +
+          '<div class="mr-pop-val ' + mClass + '">' + trendText + '</div>' +
+          '<div class="mr-pop-hint">' + trendHint + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="mr-pop-foot">点击直接展开下方量化博弈罗盘实战指导</div>';
@@ -5243,9 +5470,10 @@ NewsCatalystEngine.subscribe((code, result) => {
   }, 60000);
   checkUrlHashSync();
 
-  // 异步预取自选股资讯热点与催化剂
+  // 异步预取自选股资讯热点与催化剂，以及日K均线数据
   if (monitors.length > 0) {
     NewsCatalystEngine.prefetchList(monitors.map(m => m.code));
+    monitors.forEach(m => QuantCompassEngine.fetchDayK(m.code));
   }
 
   // 盘中量化脉冲全局 HUD 初始化刷新

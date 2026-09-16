@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>量化博弈罗盘 · 5分钟极简入门指南 (ELI5 图解版)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1220'/%3E%3Cpath d='M16 4 L20 13 L29 16 L20 19 L16 28 L12 19 L3 16 L12 13 Z' fill='%23f5a623'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0b1220;
+    --card: #111a2c;
+    --card-soft: #16223a;
+    --card-hover: #1c2b48;
+    --border: rgba(148, 173, 214, 0.14);
+    --border-highlight: rgba(245, 166, 35, 0.45);
+    --text: #e8eefb;
+    --text-dim: #8fa3c3;
+    --text-faint: #5f7396;
+    --accent: #f5a623;
+    --bull: #26a69a;
+    --bull-bg: rgba(38, 166, 154, 0.12);
+    --bear: #ef5350;
+    --bear-bg: rgba(239, 83, 80, 0.12);
+    --warn: #ff9800;
+    --warn-bg: rgba(255, 152, 0, 0.12);
+    --blue: #3890ff;
+    --blue-bg: rgba(56, 144, 255, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 700px at 50% -10%, #152340 0%, var(--bg) 70%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.6;
+    padding: 24px 16px 80px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* 顶部导航条 */
+  .top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .nav-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: all .2s;
+  }
+  .nav-back:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--card-soft);
+  }
+  .brand-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .badge-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(245, 166, 35, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+    font-weight: 600;
+  }
+
+  /* 主头部 */
+  header.hero {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 10px 0;
+  }
+  .hero-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.2) 0%, rgba(56, 144, 255, 0.2) 100%);
+    border: 1px solid var(--border-highlight);
+    margin-bottom: 16px;
+    box-shadow: 0 12px 32px rgba(245, 166, 35, 0.15);
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    color: #ffffff;
+  }
+  .hero-desc {
+    font-size: 15px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* 核心章节 */
+  section {
+    margin-bottom: 48px;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: #ffffff;
+  }
+  .section-title .icon-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    font-size: 16px;
+  }
+
+  /* 通用卡片 */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 18px;
+    transition: all .2s ease;
+  }
+  .card:hover {
+    border-color: rgba(245, 166, 35, 0.35);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  /* 拔河类比横幅 */
+  .tug-banner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(38, 166, 154, 0.1) 0%, rgba(239, 83, 80, 0.1) 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+  .tug-side {
+    text-align: center;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--card-soft);
+  }
+  .tug-side.bull { border: 1px solid rgba(38, 166, 154, 0.3); }
+  .tug-side.bear { border: 1px solid rgba(239, 83, 80, 0.3); }
+  .tug-center {
+    text-align: center;
+    padding: 0 10px;
+  }
+  .tug-center .compass-core {
+    font-size: 28px;
+    animation: pulse 2s infinite ease-in-out;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  /* 4维体检网格 */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .meter-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .meter-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .meter-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .analogy-badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: var(--card-soft);
+    color: var(--accent);
+    border: 1px solid rgba(245, 166, 35, 0.25);
+  }
+  .meter-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+  .visual-box {
+    background: var(--card-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .visual-box strong {
+    color: #ffffff;
+  }
+
+  /* 实战决策卡片列 */
+  .decision-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 16px;
+  }
+  .decision-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+  }
+  .decision-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+  }
+  .decision-card.trim::before { background: var(--warn); }
+  .decision-card.stop::before { background: var(--bear); }
+  .decision-card.buy::before { background: var(--bull); }
+  .decision-card.neutral::before { background: var(--blue); }
+
+  .decision-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .decision-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .decision-tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .decision-tag.trim { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); }
+  .decision-tag.stop { background: var(--bear-bg); color: var(--bear); border: 1px solid var(--bear); }
+  .decision-tag.buy { background: var(--bull-bg); color: var(--bull); border: 1px solid var(--bull); }
+  .decision-tag.neutral { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue); }
+
+  .decision-analogy {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .decision-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .decision-action {
+    background: var(--card-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  /* 逐笔大单雷达展示 */
+  .tick-radar-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 14px;
+  }
+  .tick-col {
+    background: var(--card-soft);
+    border-radius: 10px;
+    padding: 14px;
+    border: 1px solid var(--border);
+  }
+  .tick-col-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tick-col.buy .tick-col-title { color: var(--bull); }
+  .tick-col.sell .tick-col-title { color: var(--bear); }
+  .tick-pill-sample {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .tick-pill-sample.buy { background: var(--bull-bg); color: var(--bull); }
+  .tick-pill-sample.sell { background: var(--bear-bg); color: var(--bear); }
+
+  /* 3步速记表 */
+  .steps-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .step-item {
+    background: var(--card-soft);
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .step-num {
+    font-size: 32px;
+    font-weight: 800;
+    color: rgba(245, 166, 35, 0.25);
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    line-height: 1;
+  }
+  .step-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 8px;
+  }
+  .step-desc {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* 底部署名 */
+  footer {
+    text-align: center;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .footer-brand {
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 768px) {
+    .tug-banner { grid-template-columns: 1fr; }
+    .steps-list { grid-template-columns: 1fr; }
+    .tick-radar-box { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 顶部导航 -->
+  <nav class="top-nav">
+    <a href="./" class="nav-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      返回盯盘
+    </a>
+    <div class="brand-pill">
+      <span>问鼎 · Ding</span>
+      <span class="badge-tag">ELI5 简明手册</span>
+    </div>
+  </nav>
+
+  <!-- 主头部 -->
+  <header class="hero">
+    <div class="hero-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon></svg>
+    </div>
+    <h1>量化博弈罗盘 · 5分钟极简入门指南</h1>
+    <p class="hero-desc">
+      把盘口复杂的量化微观博弈翻译成人人都能秒懂的大白话。不再看天书代码，像看汽车仪表盘一样轻松洞察主力意图。
+    </p>
+  </header>
+
+  <!-- 第一章：核心原理 (拔河比喻) -->
+  <section>
+    <div class="section-title">
+      <span class="icon-circle">🎪</span>
+      <h2>10秒看懂大局：盘面到底在发生什么？</h2>
+    </div>
+
+    <div class="tug-banner">
+      <div class="tug-side bull">
+        <div style="font-size: 24px; margin-bottom: 4px;">🐂</div>
+        <div style="font-weight: 700; color: var(--bull);">多头（买方）</div>
+        <div style="font-size: 12px; color: var(--text-dim);">想把价格往上拉</div>
+      </div>
+      <div class="tug-center">
+        <div class="compass-core">🧭</div>
+        <div style="font-size: 11px; color: var(--accent); font-weight: 600; margin-top: 4px;">量化博弈罗盘</div>
+        <div style="font-size: 10px; color: var(--text-faint);">实时拉力传感器</div>
+      </div>
+      <div class="tug-side bear">
+        <div style="font-size: 24px; margin-bottom: 4px;">🐻</div>
+        <div style="font-weight: 700; color: var(--bear);">空头（卖方）</div>
+        <div style="font-size: 12px; color: var(--text-dim);">想把价格往下砸</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p style="font-size: 14px; color: var(--text-dim); line-height: 1.7;">
+        股票价格的上下跳动，本质就是一根绳子上的拔河比赛。普通人盯盘容易被盘中红绿跳动的假动作迷惑，而“量化博弈罗盘”是安装在绳子中央的高清传感器：
+        它不听各方的口号吹嘘，只监测<strong>真金白银的踩油门力度、成本安全线、防守垫子和巨鲸流向</strong>。
+      </p>
+    </div>
+  </section>
+
+  <!-- 第二章：左栏 · 多空全盘体检 -->
+  <section>
+    <div class="section-title">
+      <span class="icon-circle">🧭</span>
+      <h2>左栏：多空全盘体检（像体检表一样直白）</h2>
+    </div>
+
+    <div class="grid-2">
+      <!-- 维度1 -->
+      <div class="meter-card">
+        <div>
+          <div class="meter-head">
+            <div class="meter-name">
+              <span>🚀</span> 上涨冲劲 (成交量配合)
+            </div>
+            <span class="analogy-badge">汽车踩油门</span>
+          </div>
+          <div class="meter-text">
+            车子想加速往前跑，发动机必须轰油门。
+            如果股价蹭蹭往上涨，成交量比平时放大数倍，说明这是真有大动力在推进；如果车速很快但根本没加油（缩量冲高），往往走不了多远就要熄火滑坡。
+          </div>
+        </div>
+        <div class="visual-box">
+          <strong>白话准则：</strong>放量上涨是动力足，缩量冲高防后劲乏力。
+        </div>
+      </div>
+
+      <!-- 维度2 -->
+      <div class="meter-card">
+        <div>
+          <div class="meter-head">
+            <div class="meter-name">
+              <span>🛡️</span> 走势健康 (站稳生命线)
+            </div>
+            <span class="analogy-badge">安全绳与地基</span>
+          </div>
+          <div class="meter-text">
+            分时黄线（VWAP）是今天全场所有买入者的“平均持仓成本价”。
+            只要现价稳稳站在黄线上方，说明今天入场的大多数人都在赚钱，心态踏实，属于健康安全区；一旦跌破黄线，全场瞬间大面积浮亏，容易引发连锁割肉踩踏。
+          </div>
+        </div>
+        <div class="visual-box">
+          <strong>白话准则：</strong>均线上安心玩耍，跌破均线多头转弱。
+        </div>
+      </div>
+
+      <!-- 维度3 -->
+      <div class="meter-card">
+        <div>
+          <div class="meter-head">
+            <div class="meter-name">
+              <span>🧱</span> 挂单防守 (下方托单力度)
+            </div>
+            <span class="analogy-badge">坠落保护气囊</span>
+          </div>
+          <div class="meter-text">
+            查看五档买单和卖单的厚度悬殊。
+            下方买盘挂满了厚厚的大买单，就像在脚底铺了一层厚海绵，价格掉下来有人托底承接；反之如果上方卖盘堆积如山，就像头顶堆满砖头，往上爬极为费劲。
+          </div>
+        </div>
+        <div class="visual-box">
+          <strong>白话准则：</strong>委比为正托底厚，委比为负头顶砖头沉。
+        </div>
+      </div>
+
+      <!-- 维度4 -->
+      <div class="meter-card">
+        <div>
+          <div class="meter-head">
+            <div class="meter-name">
+              <span>💎</span> 主力意图 (大资金真金买卖)
+            </div>
+            <span class="analogy-badge">真掏钱 vs 光喊口号</span>
+          </div>
+          <div class="meter-text">
+            挂在盘口上的单子随时可以一秒撤销（光吼不练假把式）。
+            只有以卖出价主动抢买成交（外盘）才是真把钞票花出去了。外盘抢买占比超过 50% 代表买方急切抢货，低于 40% 说明资金正暗中离场。
+          </div>
+        </div>
+        <div class="visual-box">
+          <strong>白话准则：</strong>外盘比例高是真掏钱，内盘比例大是真砸盘。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第三章：中栏 · 今日人话实战建议 -->
+  <section>
+    <div class="section-title">
+      <span class="icon-circle">⚡</span>
+      <h2>中栏：今日人话实战建议（副驾驶智能领航员）</h2>
+    </div>
+
+    <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 18px;">
+      罗盘将复杂的盘口量化运算直接转化为直白的操盘行动指令，像副驾驶的领航员一样给出明确操作指向：
+    </p>
+
+    <div class="decision-grid">
+      <!-- 规则 1 -->
+      <div class="decision-card trim">
+        <div class="decision-header">
+          <div class="decision-title">🎈 冲高落袋</div>
+          <span class="decision-tag trim">分批减半</span>
+        </div>
+        <div class="decision-analogy">气球吹得太饱容易扎破</div>
+        <div class="decision-desc">
+          现价已经大幅偏离今天的平均成本线（超过 +3%）。短时间内涨得过急过凶，上方容易遭遇大资金突然跳水兑现。
+        </div>
+        <div class="decision-action">
+          <strong>实战操作：</strong>手里有利润的先卖掉一半装进口袋，没买的管住手不要追高！
+        </div>
+      </div>
+
+      <!-- 规则 2 -->
+      <div class="decision-card stop">
+        <div class="decision-header">
+          <div class="decision-title">⚠️ 破位防守</div>
+          <span class="decision-tag stop">果断撤退</span>
+        </div>
+        <div class="decision-analogy">安全绳崩断，保命第一</div>
+        <div class="decision-desc">
+          现价跌穿了今天全天平均买入成本线（偏离低于 -1.5%）。全场多数人开始亏损，空方占据主动，继续下探概率大。
+        </div>
+        <div class="decision-action">
+          <strong>实战操作：</strong>不要抱有侥幸心理去死扛，果断止损离场保住本金，等止跌企稳再看！
+        </div>
+      </div>
+
+      <!-- 规则 3 -->
+      <div class="decision-card buy">
+        <div class="decision-header">
+          <div class="decision-title">🔥 放量主攻</div>
+          <span class="decision-tag buy">顺势跟车</span>
+        </div>
+        <div class="decision-analogy">重型卡车加满油往前冲</div>
+        <div class="decision-desc">
+          成交热度放大到平时的数倍，价格强势上涨且牢牢踩在成本均线上方。大主力真金白银大笔扫货进攻。
+        </div>
+        <div class="decision-action">
+          <strong>实战操作：</strong>可以顺势小仓位跟进买入，只要不破分时均线就安心持股待涨。
+        </div>
+      </div>
+
+      <!-- 规则 4 -->
+      <div class="decision-card stop">
+        <div class="decision-header">
+          <div class="decision-title">🎭 防假托单</div>
+          <span class="decision-tag stop">趁高撤离</span>
+        </div>
+        <div class="decision-analogy">假排队托儿，暗度陈仓</div>
+        <div class="decision-desc">
+          买盘挂单密密麻麻看起来十分安全，但价格不涨反跌，主动买入的人极少。这是主力摆假架势掩护出货。
+        </div>
+        <div class="decision-action">
+          <strong>实战操作：</strong>不要以为挂单多就不会跌，趁还有买单直接卖出离场，提防主力突然撤单闪崩。
+        </div>
+      </div>
+
+      <!-- 规则 5 -->
+      <div class="decision-card buy">
+        <div class="decision-header">
+          <div class="decision-title">🦖 强势吞单</div>
+          <span class="decision-tag buy">主力扫货</span>
+        </div>
+        <div class="decision-analogy">大挖掘机硬啃石头山</div>
+        <div class="decision-desc">
+          上方卖盘压制沉重，但股价不仅没跌，反而是大笔外盘单一口一口把大卖单直接吃光，这是强主力逼空。
+        </div>
+        <div class="decision-action">
+          <strong>实战操作：</strong>密切观察上方压单被吃掉八九成时，可以果断快速跟进买入。
+        </div>
+      </div>
+
+      <!-- 规则 6 -->
+      <div class="decision-card neutral">
+        <div class="decision-header">
+          <div class="decision-title">☕ 稳健持股</div>
+          <span class="decision-tag neutral">安心拿着</span>
+        </div>
+        <div class="decision-analogy">平静水面，顺其自然</div>
+        <div class="decision-desc">
+          成交量和价格都在常态区间健康波动，主力既没有爆拉也没有砸盘，多空双方平稳换手。
+        </div>
+        <div class="decision-action">
+          <strong>实战操作：</strong>手里有票的放平心态拿好，不用被盘中一两毛钱波动扰乱节律；空仓者耐心等待明朗。
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第四章：右栏 · 主力大资金买卖流 -->
+  <section>
+    <div class="section-title">
+      <span class="icon-circle">🌊</span>
+      <h2>右栏：主力大资金买卖流（水下巨鲸雷达）</h2>
+    </div>
+
+    <div class="card">
+      <p style="font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 12px;">
+        普通散户看盘经常被几百元、几千元的碎单搞得眼花缭乱。逐笔大单流是专属的“探鱼雷达”，直接开启金额过滤网，屏蔽散户杂音，只盯大资金：
+      </p>
+
+      <div class="tick-radar-box">
+        <div class="tick-col buy">
+          <div class="tick-col-title">
+            <span>🔥</span> 抢买（外盘红色标记）
+          </div>
+          <div style="font-size: 12px; color: var(--text-dim); line-height: 1.6;">
+            主动向上以卖方的价格直接吃货。<br>
+            这表明大资金根本不在乎一两分钱的便宜，迫不及待想要筹码，属于强烈的买入意图。
+          </div>
+          <div class="tick-pill-sample buy">12手 (152.3万) 抢买</div>
+        </div>
+
+        <div class="tick-col sell">
+          <div class="tick-col-title">
+            <span>❄️</span> 砸盘（内盘绿色标记）
+          </div>
+          <div style="font-size: 12px; color: var(--text-dim); line-height: 1.6;">
+            主动向下以买方的价格直接倾泻甩卖。<br>
+            这表明大资金不计成本想要变现离场，属于强烈的空头打压信号。
+          </div>
+          <div class="tick-pill-sample sell">20手 (210.6万) 砸盘</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; padding: 10px 12px; background: var(--card-soft); border-radius: 8px; font-size: 12px; color: var(--text-dim);">
+        💡 <strong>过滤小技巧：</strong>盘中点击右上角 <strong>「≥20万」</strong> 或 <strong>「≥50万」</strong> 按钮，能够瞬间看清大主力到底是在暗中吸筹还是在偷偷撤退。
+      </div>
+    </div>
+  </section>
+
+  <!-- 第五章：3步极简操盘法则 -->
+  <section>
+    <div class="section-title">
+      <span class="icon-circle">📋</span>
+      <h2>3步极简操盘口诀：看盘只需5秒钟</h2>
+    </div>
+
+    <div class="steps-list">
+      <div class="step-item">
+        <div class="step-num">01</div>
+        <div class="step-title">先看中栏建议</div>
+        <div class="step-desc">直接读副驾驶指令：安心持股、冲高卖出一半、还是破位止损撤离。</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">02</div>
+        <div class="step-title">再扫左栏均线</div>
+        <div class="step-desc">确认现价是否站在全天成本均线之上，站稳均线就是稳健安全区。</div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">03</div>
+        <div class="step-title">扫一眼右栏大单</div>
+        <div class="step-desc">筛选≥20万大单，确认主力是在真掏钱抢货还是大单砸盘，心里底气十足。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 底部署名与声明 -->
+  <footer>
+    <div style="margin-bottom: 8px;">
+      <span class="footer-brand">37Flow</span> · WorkLabs
+    </div>
+    <div>量化博弈罗盘 · 纯前端自包含工具集</div>
+  </footer>
+</div>
+
+</body>
+</html>
