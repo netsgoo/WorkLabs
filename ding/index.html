@@ -66,6 +66,8 @@
   .status-pill.on { color: #bfe8d6; border-color: rgba(47,209,137,.4); }
   .status-pill.triggered .dot { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
   .status-pill.triggered { color: #ff9f9f; border-color: rgba(255,71,87,.5); background: rgba(255,71,87,.1); animation: pill-pulse 1s infinite alternate; }
+  .status-pill.throttled .dot { background: #8fa3c3; box-shadow: 0 0 6px rgba(148,173,214,.4); }
+  .status-pill.throttled { color: #8fa3c3; border-color: rgba(148,173,214,.3); background: rgba(148,173,214,.08); }
   @keyframes pill-pulse { 0% { opacity: 0.85; } 100% { opacity: 1; } }
 
   /* 通用卡片容器 */
@@ -254,7 +256,16 @@
         <label for="volumeRange">音量 <span id="volumeVal" class="num">80%</span></label>
         <input type="range" id="volumeRange" min="0" max="100" step="5" value="80">
       </div>
+      <div class="setting-item" title="所有标的处于休市期间自动切换为60秒节流轮询">
+        <label for="throttleToggle" style="cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
+          <input type="checkbox" id="throttleToggle" checked style="accent-color:var(--accent); cursor:pointer;">
+          <span>休市节流</span>
+        </label>
+      </div>
       <button id="testSoundBtn" class="btn btn-ghost btn-sm" title="点击试听当前音效与音量">🔊 试听</button>
+      <button id="exportBtn" class="btn btn-ghost btn-sm" title="导出全部监控项与设置为 JSON 备份文件">📥 导出</button>
+      <button id="importBtn" class="btn btn-ghost btn-sm" title="从 JSON 备份文件恢复监控项">📤 导入</button>
+      <input type="file" id="importFileInput" accept=".json" style="display: none;">
       <div id="globalPill" class="status-pill on">
         <span class="dot"></span>
         <span id="globalStatusText">监控就绪</span>
@@ -262,7 +273,7 @@
     </div>
   </header>
 
-  <!-- 添加新监控表单 -->
+  <!-- 添加新监控表单（支持双向预警） -->
   <section class="card">
     <div class="add-bar">
       <div class="field">
@@ -272,22 +283,19 @@
         <div id="suggestBox" class="suggest"></div>
       </div>
       <div class="field">
-        <label for="targetInput">目标价格</label>
-        <input id="targetInput" type="number" min="0" step="0.01" placeholder="如 1300 或 450">
+        <label for="upperInput">上限目标（≥ 突破/止盈）</label>
+        <input id="upperInput" type="number" min="0" step="0.01" placeholder="选填，如 1300 或 450">
       </div>
       <div class="field">
-        <label for="dirSelect">触发条件</label>
-        <select id="dirSelect">
-          <option value="ge">涨到 / 达到（≥）</option>
-          <option value="le">跌到（≤）</option>
-        </select>
+        <label for="lowerInput">下限目标（≤ 跌破/止损）</label>
+        <input id="lowerInput" type="number" min="0" step="0.01" placeholder="选填，如 1200 或 410">
       </div>
       <button id="addBtn" class="btn btn-primary">
         <span>＋</span> 添加监控
       </button>
     </div>
     <div class="sound-tip">
-      <span>支持 A股（如 <code>600519</code>、<code>sz002594</code>）与港股（如 <code>00700</code>、<code>hk09988</code>）。设置自动保存在浏览器中。</span>
+      <span>支持 A股与港股。上限与下限二者至少填一项，支持同时双向监控。设置自动保存在浏览器中。</span>
       <span id="audioTip" style="color: var(--accent);">提示音已就绪</span>
     </div>
   </section>
@@ -344,20 +352,17 @@
   </footer>
 </div>
 
-<!-- 修改目标价模态框 -->
+<!-- 修改目标价模态框（支持双向预警） -->
 <div class="modal-mask" id="editModal">
   <div class="modal">
     <h3 id="modalTitle">调整监控目标</h3>
     <div class="form-row field">
-      <label for="editTargetInput">新的目标价格</label>
-      <input id="editTargetInput" type="number" min="0" step="0.01">
+      <label for="editUpperInput">上限目标（≥ 突破/止盈，留空则不监控上限）</label>
+      <input id="editUpperInput" type="number" min="0" step="0.01" placeholder="留空则不监控上限">
     </div>
     <div class="form-row field">
-      <label for="editDirSelect">触发条件</label>
-      <select id="editDirSelect">
-        <option value="ge">涨到 / 达到（≥）</option>
-        <option value="le">跌到（≤）</option>
-      </select>
+      <label for="editLowerInput">下限目标（≤ 跌破/止损，留空则不监控下限）</label>
+      <input id="editLowerInput" type="number" min="0" step="0.01" placeholder="留空则不监控下限">
     </div>
     <div class="modal-btns">
       <button id="modalCancelBtn" class="btn btn-ghost btn-sm">取消</button>
@@ -388,32 +393,43 @@ const STORAGE_KEY = 'stock_alarm_v2_monitors';
 const INTERVAL_KEY = 'stock_alarm_v2_interval';
 const SOUND_TYPE_KEY = 'stock_alarm_v2_sound_type';
 const SOUND_VOL_KEY = 'stock_alarm_v2_sound_vol';
+const THROTTLE_KEY = 'stock_alarm_v2_throttle';
 
-let monitors = [];       // [{ id, code, target, dir, status }]
+let monitors = [];       // [{ id, code, upperTarget, lowerTarget, status, triggeredReason }]
 let quotes = {};         // { [code]: quoteObj }
 let selectedId = null;   // 当前展示分时图的 monitorId
+let isChartCollapsed = false; // 用户是否手动收起了走势图
 let timer = null;
 let chartRefreshTimer = null;
 let refreshInterval = 5000;
 let currentSoundType = 'chime';
 let currentVolume = 80;
+let smartThrottleEnabled = true;
+let isThrottling = false;
 let audioCtx = null;
 let echartsLib = null;
 let chartInstance = null;
 let editingMonitorId = null;
 let soundLoopTimer = null;
+let titleFlashTimer = null;
+let titleFlashStep = 0;
+const ORIGINAL_TITLE = document.title || '问鼎 · Ding · 多股实时盯盘';
 
 const els = {
   intervalSelect: document.getElementById('intervalSelect'),
   soundSelect: document.getElementById('soundSelect'),
   volumeRange: document.getElementById('volumeRange'),
   volumeVal: document.getElementById('volumeVal'),
+  throttleToggle: document.getElementById('throttleToggle'),
   testSoundBtn: document.getElementById('testSoundBtn'),
+  exportBtn: document.getElementById('exportBtn'),
+  importBtn: document.getElementById('importBtn'),
+  importFileInput: document.getElementById('importFileInput'),
   globalPill: document.getElementById('globalPill'),
   globalStatusText: document.getElementById('globalStatusText'),
   codeInput: document.getElementById('codeInput'),
-  targetInput: document.getElementById('targetInput'),
-  dirSelect: document.getElementById('dirSelect'),
+  upperInput: document.getElementById('upperInput'),
+  lowerInput: document.getElementById('lowerInput'),
   addBtn: document.getElementById('addBtn'),
   suggestBox: document.getElementById('suggestBox'),
   monitorTbody: document.getElementById('monitorTbody'),
@@ -429,8 +445,8 @@ const els = {
   toast: document.getElementById('toast'),
   editModal: document.getElementById('editModal'),
   modalTitle: document.getElementById('modalTitle'),
-  editTargetInput: document.getElementById('editTargetInput'),
-  editDirSelect: document.getElementById('editDirSelect'),
+  editUpperInput: document.getElementById('editUpperInput'),
+  editLowerInput: document.getElementById('editLowerInput'),
   modalCancelBtn: document.getElementById('modalCancelBtn'),
   modalSaveBtn: document.getElementById('modalSaveBtn')
 };
@@ -457,6 +473,99 @@ function normalizeCode(raw) {
 function marketNameOf(code) {
   if (/^hk/.test(code)) return '港股';
   return 'A股';
+}
+
+/* ================= 监控项数据结构规范化与旧版数据无缝迁移 ================= */
+function normalizeMonitorItem(item) {
+  if (!item || typeof item !== 'object') return null;
+  const code = normalizeCode(item.code);
+  if (!code) return null;
+
+  let upper = (item.upperTarget != null && !isNaN(parseFloat(item.upperTarget))) ? parseFloat(item.upperTarget) : null;
+  let lower = (item.lowerTarget != null && !isNaN(parseFloat(item.lowerTarget))) ? parseFloat(item.lowerTarget) : null;
+
+  // 兼容旧版单值数据 (target, dir)
+  if (upper == null && lower == null && item.target != null) {
+    const t = parseFloat(item.target);
+    if (!isNaN(t) && t > 0) {
+      if (item.dir === 'le') {
+        lower = t;
+      } else {
+        upper = t;
+      }
+    }
+  }
+
+  // 二者至少存在一个有效目标
+  if (upper == null && lower == null) return null;
+
+  return {
+    id: item.id || ('m_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6)),
+    code: code,
+    upperTarget: upper,
+    lowerTarget: lower,
+    status: item.status === 'triggered' || item.status === 'paused' ? item.status : 'watching',
+    triggeredReason: item.triggeredReason || null
+  };
+}
+
+/* ================= 交易时段检测（北京时间 UTC+8） ================= */
+function getBeijingDate() {
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * 8));
+}
+
+function isMarketTrading(code) {
+  const bj = getBeijingDate();
+  const day = bj.getDay();
+  // 周末休市
+  if (day === 0 || day === 6) return false;
+  const mins = bj.getHours() * 60 + bj.getMinutes();
+
+  if (/^hk/.test(code)) {
+    // 港股交易时段：09:30 - 12:00, 13:00 - 16:00
+    const m1 = (mins >= 570 && mins <= 720);
+    const m2 = (mins >= 780 && mins <= 960);
+    return m1 || m2;
+  } else {
+    // A股交易时段：09:30 - 11:30, 13:00 - 15:00
+    const m1 = (mins >= 570 && mins <= 690);
+    const m2 = (mins >= 780 && mins <= 900);
+    return m1 || m2;
+  }
+}
+
+function isAnyMarketTrading() {
+  if (!monitors.length) return false;
+  return monitors.some(m => isMarketTrading(m.code));
+}
+
+/* ================= 网页标题后台动态轮播闪烁 ================= */
+function startTitleFlashing(triggeredItems) {
+  if (titleFlashTimer) return;
+  const first = triggeredItems && triggeredItems.length ? triggeredItems[0] : null;
+  const q = first ? quotes[first.code] : null;
+  const stockName = q ? q.name : (first ? first.code : '标的');
+  const priceStr = q ? fmt(q.price, q.decimals) : '';
+
+  titleFlashTimer = setInterval(() => {
+    titleFlashStep++;
+    if (titleFlashStep % 2 === 1) {
+      document.title = '🔔【到价警报】' + stockName + ' ' + priceStr;
+    } else {
+      document.title = '【请处理警报】' + ORIGINAL_TITLE;
+    }
+  }, 900);
+}
+
+function stopTitleFlashing() {
+  if (titleFlashTimer) {
+    clearInterval(titleFlashTimer);
+    titleFlashTimer = null;
+    titleFlashStep = 0;
+  }
+  document.title = ORIGINAL_TITLE;
 }
 
 function fmt(n, d) {
@@ -568,13 +677,18 @@ function playAlarmSound(type = currentSoundType, vol = currentVolume) {
 }
 
 function syncSoundAlarm() {
-  const hasTriggered = monitors.some(m => m.status === 'triggered');
-  if (hasTriggered && currentSoundType !== 'mute' && currentVolume > 0) {
-    if (!soundLoopTimer) {
-      playAlarmSound();
-      soundLoopTimer = setInterval(() => playAlarmSound(), 3500);
+  const triggeredItems = monitors.filter(m => m.status === 'triggered');
+  const hasTriggered = triggeredItems.length > 0;
+  if (hasTriggered) {
+    startTitleFlashing(triggeredItems);
+    if (currentSoundType !== 'mute' && currentVolume > 0) {
+      if (!soundLoopTimer) {
+        playAlarmSound();
+        soundLoopTimer = setInterval(() => playAlarmSound(), 3500);
+      }
     }
   } else {
+    stopTitleFlashing();
     if (soundLoopTimer) {
       clearInterval(soundLoopTimer);
       soundLoopTimer = null;
@@ -657,9 +771,13 @@ function loadChartLib() {
 }
 
 async function renderSelectedChart() {
-  if (!selectedId) {
+  if (!monitors.length) {
+    selectedId = null;
     els.chartCard.classList.remove('show');
     return;
+  }
+  if (!selectedId || !monitors.some(m => m.id === selectedId)) {
+    selectedId = monitors[0].id;
   }
   const item = monitors.find(m => m.id === selectedId);
   if (!item) {
@@ -670,8 +788,10 @@ async function renderSelectedChart() {
   const q = quotes[item.code];
   els.chartStockName.textContent = q ? q.name : item.code;
   els.chartStockCode.textContent = item.code;
-  const cmpText = item.dir === 'ge' ? '≥' : '≤';
-  els.chartTargetLine.textContent = '监控条件: ' + cmpText + ' ' + item.target;
+  const condParts = [];
+  if (item.upperTarget != null) condParts.push('上限 ≥ ' + item.upperTarget);
+  if (item.lowerTarget != null) condParts.push('下限 ≤ ' + item.lowerTarget);
+  els.chartTargetLine.textContent = '监控条件: ' + (condParts.length ? condParts.join(' / ') : '未设');
   els.chartCard.classList.add('show');
 
   try {
@@ -696,14 +816,23 @@ async function renderSelectedChart() {
     if (!chartInstance) chartInstance = echarts.init(els.chartContainer);
 
     const prev = q ? q.prevClose : null;
-    const markData = [
-      {
-        yAxis: item.target,
-        name: '目标 ' + item.target,
-        lineStyle: { color: '#f5a623', type: 'dashed', width: 1.5 },
-        label: { color: '#ffd98a', position: 'insideEndTop', formatter: '目标 ' + item.target }
-      }
-    ];
+    const markData = [];
+    if (item.upperTarget != null) {
+      markData.push({
+        yAxis: item.upperTarget,
+        name: '上限 ' + item.upperTarget,
+        lineStyle: { color: '#ff5d5d', type: 'dashed', width: 1.5 },
+        label: { color: '#ff9f9f', position: 'insideEndTop', formatter: '上限 ' + item.upperTarget }
+      });
+    }
+    if (item.lowerTarget != null) {
+      markData.push({
+        yAxis: item.lowerTarget,
+        name: '下限 ' + item.lowerTarget,
+        lineStyle: { color: '#17c98f', type: 'dashed', width: 1.5 },
+        label: { color: '#8ff0c4', position: 'insideEndBottom', formatter: '下限 ' + item.lowerTarget }
+      });
+    }
     if (prev != null) {
       markData.push({
         yAxis: prev,
@@ -764,6 +893,7 @@ async function renderSelectedChart() {
         }
       }]
     }, true);
+    chartInstance.resize();
   } catch (e) {
     els.chartContainer.style.display = 'none';
     els.chartError.style.display = 'flex';
@@ -773,6 +903,12 @@ async function renderSelectedChart() {
 /* ================= 轮询与核心提醒触发 ================= */
 async function pollCycle() {
   if (!monitors.length) {
+    selectedId = null;
+    els.chartCard.classList.remove('show');
+    if (isThrottling) {
+      isThrottling = false;
+      restartTimer();
+    }
     updateGlobalStatus();
     renderTable();
     return;
@@ -787,15 +923,24 @@ async function pollCycle() {
     const q = quotes[item.code];
     if (!q) return;
     if (item.status === 'watching') {
-      const hit = item.dir === 'ge' ? q.price >= item.target : q.price <= item.target;
+      let hit = false;
+      let reason = null;
+      if (item.upperTarget != null && q.price >= item.upperTarget) {
+        hit = true;
+        reason = 'upper';
+      } else if (item.lowerTarget != null && q.price <= item.lowerTarget) {
+        hit = true;
+        reason = 'lower';
+      }
       if (hit) {
         item.status = 'triggered';
+        item.triggeredReason = reason;
         newlyTriggeredCount++;
         if ('Notification' in window && Notification.permission === 'granted') {
           try {
-            const dirDesc = item.dir === 'ge' ? '涨到 / 达到' : '跌到';
+            const dirDesc = reason === 'upper' ? ('突破上限 ≥ ' + item.upperTarget) : ('跌破下限 ≤ ' + item.lowerTarget);
             new Notification('股价到价警报 · ' + q.name, {
-              body: q.name + ' 现价 ' + fmt(q.price, q.decimals) + '，已满足条件（' + dirDesc + ' ' + item.target + '）'
+              body: q.name + ' 现价 ' + fmt(q.price, q.decimals) + '，已满足条件（' + dirDesc + '）'
             });
           } catch (e) {}
         }
@@ -808,11 +953,22 @@ async function pollCycle() {
     playAlarmSound();
   }
 
+  // 智能休市节流调度
+  const anyTrading = isAnyMarketTrading();
+  const shouldThrottle = smartThrottleEnabled && monitors.length > 0 && !anyTrading;
+  if (shouldThrottle !== isThrottling) {
+    isThrottling = shouldThrottle;
+    restartTimer();
+  }
+
   syncSoundAlarm();
   updateGlobalStatus();
   renderTable();
 
-  if (selectedId) {
+  if (!isChartCollapsed) {
+    if (!selectedId || !monitors.some(m => m.id === selectedId)) {
+      selectedId = monitors[0].id;
+    }
     renderSelectedChart();
   }
 }
@@ -826,6 +982,9 @@ function updateGlobalStatus() {
   if (triggeredCount > 0) {
     pill.className = 'status-pill triggered';
     text.textContent = triggeredCount + ' 只标的已触发警报';
+  } else if (isThrottling) {
+    pill.className = 'status-pill throttled';
+    text.textContent = '休市节流中 (60s)';
   } else if (watchingCount > 0) {
     pill.className = 'status-pill on';
     text.textContent = '监控中 ' + watchingCount + ' 只标的';
@@ -870,22 +1029,36 @@ function renderTable() {
       chgHtml = '<span class="num ' + colorClass + '">' + sign + fmt(q.change, decimals) + ' (' + sign + fmt(q.changePct, 2) + '%)</span>';
       amtHtml = '<span class="num" style="font-size:12px; color:var(--text-dim);">' + fmtBig(q.amt) + '</span>';
 
-      const diff = q.price - item.target;
-      const hit = item.dir === 'ge' ? diff >= 0 : diff <= 0;
-      const distColor = hit ? 'up' : 'flat';
-      distHtml = '<span class="num ' + distColor + '">' + (diff > 0 ? '+' : '') + fmt(diff, decimals) + '</span>';
+      const distParts = [];
+      if (item.upperTarget != null) {
+        const diffUp = q.price - item.upperTarget;
+        const hitUp = diffUp >= 0;
+        const colUp = hitUp ? 'up' : 'flat';
+        distParts.push('<span class="' + colUp + '" title="距上限差值">' + (diffUp > 0 ? '+' : '') + fmt(diffUp, decimals) + '</span>');
+      }
+      if (item.lowerTarget != null) {
+        const diffLow = q.price - item.lowerTarget;
+        const hitLow = diffLow <= 0;
+        const colLow = hitLow ? 'down' : 'flat';
+        distParts.push('<span class="' + colLow + '" title="距下限差值">' + (diffLow > 0 ? '+' : '') + fmt(diffLow, decimals) + '</span>');
+      }
+      distHtml = '<span class="num">' + (distParts.length ? distParts.join(' / ') : '--') + '</span>';
     }
 
     let statusBadge = '';
     if (item.status === 'triggered') {
-      statusBadge = '<span class="badge badge-triggered">⚠ 到价已触发</span>';
+      const reasonText = item.triggeredReason === 'upper' ? '突破上限' : (item.triggeredReason === 'lower' ? '跌破下限' : '到价已触发');
+      statusBadge = '<span class="badge badge-triggered">⚠ ' + reasonText + '</span>';
     } else if (item.status === 'watching') {
       statusBadge = '<span class="badge badge-watching">监控中</span>';
     } else {
       statusBadge = '<span class="badge badge-paused">已暂停</span>';
     }
 
-    const condText = (item.dir === 'ge' ? '≥ ' : '≤ ') + item.target;
+    const condParts = [];
+    if (item.upperTarget != null) condParts.push('≥ ' + fmt(item.upperTarget, decimals));
+    if (item.lowerTarget != null) condParts.push('≤ ' + fmt(item.lowerTarget, decimals));
+    const condText = condParts.length ? condParts.join(' / ') : '--';
 
     let actionsHtml = '';
     if (item.status === 'triggered') {
@@ -925,8 +1098,10 @@ function renderTable() {
 function addMonitor() {
   const raw = els.codeInput.value.trim();
   const code = normalizeCode(raw);
-  const target = parseFloat(els.targetInput.value);
-  const dir = els.dirSelect.value;
+  const upperRaw = els.upperInput.value.trim();
+  const lowerRaw = els.lowerInput.value.trim();
+  const upperVal = upperRaw ? parseFloat(upperRaw) : null;
+  const lowerVal = lowerRaw ? parseFloat(lowerRaw) : null;
 
   if (!raw) {
     toast('请输入股票代码或名称');
@@ -937,13 +1112,27 @@ function addMonitor() {
     toast('仅支持 A股（如 600519）与港股（如 00700）代码');
     return;
   }
-  if (isNaN(target) || target <= 0) {
-    toast('请输入有效的目标价格');
-    els.targetInput.focus();
+  if (upperVal == null && lowerVal == null) {
+    toast('上限与下限目标至少需输入一项');
+    els.upperInput.focus();
+    return;
+  }
+  if (upperVal != null && (isNaN(upperVal) || upperVal <= 0)) {
+    toast('请输入有效的上限目标价格');
+    els.upperInput.focus();
+    return;
+  }
+  if (lowerVal != null && (isNaN(lowerVal) || lowerVal <= 0)) {
+    toast('请输入有效的下限目标价格');
+    els.lowerInput.focus();
+    return;
+  }
+  if (upperVal != null && lowerVal != null && upperVal <= lowerVal) {
+    toast('上限目标价必须大于下限目标价');
     return;
   }
 
-  const existing = monitors.find(m => m.code === code && m.target === target && m.dir === dir);
+  const existing = monitors.find(m => m.code === code && m.upperTarget === upperVal && m.lowerTarget === lowerVal);
   if (existing) {
     toast('已存在完全相同的监控项');
     return;
@@ -952,15 +1141,19 @@ function addMonitor() {
   const newItem = {
     id: 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
     code: code,
-    target: target,
-    dir: dir,
-    status: 'watching'
+    upperTarget: upperVal,
+    lowerTarget: lowerVal,
+    status: 'watching',
+    triggeredReason: null
   };
 
   monitors.unshift(newItem);
+  selectedId = newItem.id;
+  isChartCollapsed = false;
   saveMonitors();
   els.codeInput.value = '';
-  els.targetInput.value = '';
+  els.upperInput.value = '';
+  els.lowerInput.value = '';
   els.suggestBox.classList.remove('open');
   ensureAudio();
 
@@ -976,6 +1169,7 @@ function stopAlarmItem(id) {
   const it = monitors.find(m => m.id === id);
   if (!it) return;
   it.status = 'paused';
+  it.triggeredReason = null;
   saveMonitors();
   syncSoundAlarm();
   updateGlobalStatus();
@@ -987,6 +1181,7 @@ function pauseItem(id) {
   const it = monitors.find(m => m.id === id);
   if (!it) return;
   it.status = 'paused';
+  it.triggeredReason = null;
   saveMonitors();
   syncSoundAlarm();
   updateGlobalStatus();
@@ -998,6 +1193,7 @@ function resumeItem(id) {
   const it = monitors.find(m => m.id === id);
   if (!it) return;
   it.status = 'watching';
+  it.triggeredReason = null;
   saveMonitors();
   syncSoundAlarm();
   updateGlobalStatus();
@@ -1010,9 +1206,15 @@ function removeItem(id) {
   if (idx < 0) return;
   const removedCode = monitors[idx].code;
   monitors.splice(idx, 1);
-  if (selectedId === id) {
+  if (!monitors.length) {
     selectedId = null;
+    isChartCollapsed = false;
     els.chartCard.classList.remove('show');
+  } else if (selectedId === id || !monitors.some(m => m.id === selectedId)) {
+    selectedId = monitors[0].id;
+    if (!isChartCollapsed) {
+      renderSelectedChart();
+    }
   }
   saveMonitors();
   syncSoundAlarm();
@@ -1022,13 +1224,9 @@ function removeItem(id) {
 }
 
 function toggleSelectRow(id) {
-  if (selectedId === id) {
-    selectedId = null;
-    els.chartCard.classList.remove('show');
-  } else {
-    selectedId = id;
-    renderSelectedChart();
-  }
+  isChartCollapsed = false;
+  selectedId = id;
+  renderSelectedChart();
   renderTable();
 }
 
@@ -1039,10 +1237,10 @@ function openEditModal(id) {
   editingMonitorId = id;
   const q = quotes[it.code];
   els.modalTitle.textContent = '调整 ' + (q ? q.name : it.code) + ' 监控目标';
-  els.editTargetInput.value = it.target;
-  els.editDirSelect.value = it.dir;
+  els.editUpperInput.value = it.upperTarget != null ? it.upperTarget : '';
+  els.editLowerInput.value = it.lowerTarget != null ? it.lowerTarget : '';
   els.editModal.classList.add('open');
-  els.editTargetInput.focus();
+  els.editUpperInput.focus();
 }
 
 function closeEditModal() {
@@ -1054,14 +1252,32 @@ function saveEditModal() {
   if (!editingMonitorId) return;
   const it = monitors.find(m => m.id === editingMonitorId);
   if (!it) return;
-  const newTarget = parseFloat(els.editTargetInput.value);
-  if (isNaN(newTarget) || newTarget <= 0) {
-    toast('请输入有效的目标价格');
+  const upperRaw = els.editUpperInput.value.trim();
+  const lowerRaw = els.editLowerInput.value.trim();
+  const upperVal = upperRaw ? parseFloat(upperRaw) : null;
+  const lowerVal = lowerRaw ? parseFloat(lowerRaw) : null;
+
+  if (upperVal == null && lowerVal == null) {
+    toast('上限与下限目标至少需输入一项');
     return;
   }
-  it.target = newTarget;
-  it.dir = els.editDirSelect.value;
+  if (upperVal != null && (isNaN(upperVal) || upperVal <= 0)) {
+    toast('请输入有效的上限目标价格');
+    return;
+  }
+  if (lowerVal != null && (isNaN(lowerVal) || lowerVal <= 0)) {
+    toast('请输入有效的下限目标价格');
+    return;
+  }
+  if (upperVal != null && lowerVal != null && upperVal <= lowerVal) {
+    toast('上限目标价必须大于下限目标价');
+    return;
+  }
+
+  it.upperTarget = upperVal;
+  it.lowerTarget = lowerVal;
   it.status = 'watching';
+  it.triggeredReason = null;
   saveMonitors();
   closeEditModal();
   syncSoundAlarm();
@@ -1069,6 +1285,95 @@ function saveEditModal() {
   renderTable();
   if (selectedId === it.id) renderSelectedChart();
   toast('已更新监控目标并重新开始监控');
+}
+
+/* ================= 配置导入与导出（JSON） ================= */
+function exportConfig() {
+  if (!monitors.length) {
+    toast('当前无任何监控项可导出');
+    return;
+  }
+  const data = {
+    version: '2.1',
+    exportTime: new Date().toISOString(),
+    refreshInterval: refreshInterval,
+    currentSoundType: currentSoundType,
+    currentVolume: currentVolume,
+    smartThrottleEnabled: smartThrottleEnabled,
+    monitors: monitors
+  };
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  a.href = url;
+  a.download = 'ding-monitors-' + dStr + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('已导出 ' + monitors.length + ' 个监控项配置');
+}
+
+function importConfig(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const obj = JSON.parse(e.target.result);
+      const list = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.monitors) ? obj.monitors : null);
+      if (!list || !list.length) {
+        toast('导入失败：未找到有效监控列表');
+        return;
+      }
+      const validItems = list.map(normalizeMonitorItem).filter(Boolean);
+      if (!validItems.length) {
+        toast('导入失败：文件中无有效监控标的');
+        return;
+      }
+      let addCount = 0;
+      validItems.forEach(item => {
+        const dup = monitors.find(m => m.code === item.code && m.upperTarget === item.upperTarget && m.lowerTarget === item.lowerTarget);
+        if (!dup) {
+          monitors.push(item);
+          addCount++;
+        }
+      });
+      if (obj.refreshInterval && !isNaN(+obj.refreshInterval)) {
+        refreshInterval = +obj.refreshInterval;
+        saveInterval(refreshInterval);
+        els.intervalSelect.value = String(refreshInterval);
+      }
+      if (obj.currentSoundType) {
+        currentSoundType = obj.currentSoundType;
+        saveSoundSettings();
+        els.soundSelect.value = currentSoundType;
+      }
+      if (obj.currentVolume != null && !isNaN(+obj.currentVolume)) {
+        currentVolume = parseInt(obj.currentVolume, 10);
+        saveSoundSettings();
+        els.volumeRange.value = String(currentVolume);
+        els.volumeVal.textContent = currentVolume + '%';
+      }
+      if (obj.smartThrottleEnabled != null) {
+        smartThrottleEnabled = !!obj.smartThrottleEnabled;
+        saveThrottleSettings();
+        if (els.throttleToggle) els.throttleToggle.checked = smartThrottleEnabled;
+      }
+      saveMonitors();
+      if (monitors.length > 0 && (!selectedId || !monitors.some(m => m.id === selectedId))) {
+        selectedId = monitors[0].id;
+      }
+      updateGlobalStatus();
+      renderTable();
+      pollCycle();
+      toast('成功导入并新增 ' + addCount + ' 个监控项');
+    } catch (err) {
+      toast('导入失败：文件解析出错');
+    }
+  };
+  reader.readAsText(file);
 }
 
 /* ================= 搜索建议联想 ================= */
@@ -1102,7 +1407,12 @@ function loadMonitors() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      monitors = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        monitors = parsed.map(normalizeMonitorItem).filter(Boolean);
+      } else {
+        monitors = [];
+      }
     } else {
       monitors = [];
     }
@@ -1150,9 +1460,26 @@ function loadSoundSettings() {
   } catch (e) {}
 }
 
+function saveThrottleSettings() {
+  try {
+    localStorage.setItem(THROTTLE_KEY, smartThrottleEnabled ? '1' : '0');
+  } catch (e) {}
+}
+
+function loadThrottleSettings() {
+  try {
+    const raw = localStorage.getItem(THROTTLE_KEY);
+    if (raw != null) {
+      smartThrottleEnabled = raw === '1';
+      if (els.throttleToggle) els.throttleToggle.checked = smartThrottleEnabled;
+    }
+  } catch (e) {}
+}
+
 function restartTimer() {
   clearInterval(timer);
-  timer = setInterval(pollCycle, refreshInterval);
+  const interval = isThrottling ? 60000 : refreshInterval;
+  timer = setInterval(pollCycle, interval);
 }
 
 /* ================= 事件监听绑定 ================= */
@@ -1162,9 +1489,25 @@ els.codeInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
     els.suggestBox.classList.remove('open');
-    addMonitor();
+    if (els.upperInput.value || els.lowerInput.value) {
+      addMonitor();
+    } else {
+      els.upperInput.focus();
+    }
   }
   if (e.key === 'Escape') els.suggestBox.classList.remove('open');
+});
+els.upperInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addMonitor();
+  }
+});
+els.lowerInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addMonitor();
+  }
 });
 els.suggestBox.addEventListener('mousedown', e => {
   const it = e.target.closest('.it');
@@ -1172,7 +1515,7 @@ els.suggestBox.addEventListener('mousedown', e => {
     e.preventDefault();
     els.codeInput.value = it.dataset.c;
     els.suggestBox.classList.remove('open');
-    els.targetInput.focus();
+    els.upperInput.focus();
   }
 });
 
@@ -1225,7 +1568,36 @@ els.testSoundBtn.addEventListener('click', () => {
   toast('试听：' + els.soundSelect.options[els.soundSelect.selectedIndex].text + ' · 音量 ' + currentVolume + '%');
 });
 
+/* 智能节流与配置导入导出事件 */
+els.throttleToggle.addEventListener('change', () => {
+  smartThrottleEnabled = els.throttleToggle.checked;
+  saveThrottleSettings();
+  const anyTrading = isAnyMarketTrading();
+  isThrottling = smartThrottleEnabled && monitors.length > 0 && !anyTrading;
+  restartTimer();
+  updateGlobalStatus();
+  toast('已' + (smartThrottleEnabled ? '开启' : '关闭') + '休市智能节流');
+});
+
+els.exportBtn.addEventListener('click', exportConfig);
+els.importBtn.addEventListener('click', () => {
+  els.importFileInput.value = '';
+  els.importFileInput.click();
+});
+els.importFileInput.addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (file) importConfig(file);
+});
+
+/* 后台标签页与标题联动 */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && !monitors.some(m => m.status === 'triggered')) {
+    stopTitleFlashing();
+  }
+});
+
 els.closeChartBtn.addEventListener('click', () => {
+  isChartCollapsed = true;
   selectedId = null;
   els.chartCard.classList.remove('show');
   renderTable();
@@ -1236,6 +1608,19 @@ els.modalSaveBtn.addEventListener('click', saveEditModal);
 els.editModal.addEventListener('click', e => {
   if (e.target === els.editModal) closeEditModal();
 });
+els.editUpperInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    saveEditModal();
+  }
+});
+els.editLowerInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    saveEditModal();
+  }
+});
+
 window.addEventListener('resize', () => {
   if (chartInstance) chartInstance.resize();
 });
@@ -1244,13 +1629,24 @@ window.addEventListener('resize', () => {
 (function init() {
   loadInterval();
   loadSoundSettings();
+  loadThrottleSettings();
   loadMonitors();
+  if (monitors.length > 0) {
+    selectedId = monitors[0].id;
+    isChartCollapsed = false;
+  } else {
+    selectedId = null;
+    isChartCollapsed = false;
+    els.chartCard.classList.remove('show');
+  }
+  const anyTrading = isAnyMarketTrading();
+  isThrottling = smartThrottleEnabled && monitors.length > 0 && !anyTrading;
   updateGlobalStatus();
   renderTable();
   restartTimer();
   pollCycle();
   chartRefreshTimer = setInterval(() => {
-    if (selectedId) renderSelectedChart();
+    if (!isChartCollapsed && selectedId) renderSelectedChart();
   }, 60000);
 })();
 </script>
