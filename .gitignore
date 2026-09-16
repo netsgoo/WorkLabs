@@ -1,6 +1,6 @@
 # 备份与临时文件
 *.bak
-*.v2.bak
+*.bak*
 *.tmp
 .DS_Store
 Thumbs.db
