@@ -1363,35 +1363,163 @@
     padding: 6px 12px;
     font-size: 12px;
   }
-  .qp-rule-banner {
+  /* 一体化攻防价格轨道 (去AI味高质感设计) */
+  .qp-levels-rail {
     display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-size: 12px;
+    align-items: stretch;
+    background: rgba(14, 24, 44, 0.65);
+    border: 1px solid rgba(148, 173, 214, 0.12);
+    border-radius: 8px;
+    padding: 2px;
+    position: relative;
+    backdrop-filter: blur(8px);
   }
-  .qp-rule-code-tag {
-    font-family: Consolas, monospace;
+  .qp-rail-cell {
+    flex: 1;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    transition: background .2s;
+    border-radius: 6px;
+  }
+  .qp-rail-cell:not(:last-child) {
+    border-right: 1px solid rgba(148, 173, 214, 0.08);
+  }
+  .qp-rail-cell:hover {
+    background: rgba(148, 173, 214, 0.05);
+  }
+  .qp-rail-top {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 4px;
+  }
+  .qp-rail-led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .qp-rail-led.support {
+    background: #17c98f;
+    box-shadow: 0 0 6px rgba(23, 201, 143, 0.8);
+  }
+  .qp-rail-led.vwap {
+    background: #f5a623;
+    box-shadow: 0 0 6px rgba(245, 166, 35, 0.8);
+  }
+  .qp-rail-led.resist {
+    background: #ff5d5d;
+    box-shadow: 0 0 6px rgba(255, 93, 93, 0.8);
+  }
+  .qp-rail-label {
     font-size: 11px;
-    color: var(--accent);
-    background: rgba(245, 166, 35, 0.1);
-    padding: 1px 6px;
-    border-radius: 3px;
-  }
-  .qp-rule-desc {
-    font-size: 12px;
     color: var(--text-dim);
-    line-height: 1.55;
+    font-weight: 500;
+  }
+  .qp-rail-tag {
+    font-size: 9px;
+    color: var(--text-faint);
+    background: rgba(148, 173, 214, 0.08);
+    padding: 1px 4px;
+    border-radius: 3px;
+    margin-left: auto;
+    font-family: Consolas, monospace;
+  }
+  .qp-rail-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: Bahnschrift, "SF Pro Display", Consolas, sans-serif;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  .qp-rail-dist {
+    font-size: 10px;
+    font-family: Bahnschrift, Consolas, sans-serif;
+    color: var(--text-dim);
+  }
+  .qp-rail-dist.down { color: var(--down); }
+  .qp-rail-dist.up { color: var(--up); }
+
+  /* 操盘对策双视角分流 */
+  .qp-tactics-split {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 auto;
+  }
+  .qp-tactic-panel {
     background: rgba(148, 173, 214, 0.04);
+    border: 1px solid rgba(148, 173, 214, 0.1);
     border-radius: 6px;
     padding: 8px 10px;
-    border-left: 3px solid var(--accent);
+    transition: all .2s;
   }
-  .qp-tactic-box {
+  .qp-tactic-panel:hover {
+    background: rgba(148, 173, 214, 0.08);
+  }
+  .qp-tactic-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+  .qp-tactic-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .qp-tactic-dot.holder {
+    background: #17c98f;
+    box-shadow: 0 0 5px rgba(23, 201, 143, 0.6);
+  }
+  .qp-tactic-dot.watcher {
+    background: #38bdf8;
+    box-shadow: 0 0 5px rgba(56, 189, 248, 0.6);
+  }
+  .qp-tactic-role {
     font-size: 11px;
-    color: var(--text-faint);
-    line-height: 1.5;
-    padding-top: 6px;
-    border-top: 1px dashed rgba(148, 173, 214, 0.1);
+    font-weight: 700;
+    color: var(--text);
+  }
+  .qp-tactic-content {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  /* 快捷预警动作条 */
+  .qp-action-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+  .qp-preset-btn {
+    flex: 1;
+    font-size: 11px;
+    padding: 6px 8px;
+    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(148, 173, 214, 0.06);
+    border: 1px solid rgba(148, 173, 214, 0.18);
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .qp-preset-btn:hover {
+    background: rgba(148, 173, 214, 0.14);
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   /* 右栏：逐笔大单瀑布流 */
@@ -1680,13 +1808,16 @@
     <!-- 走势图下方：操盘双模态导航条 -->
     <div class="deck-mode-tabs" id="deckModeTabs">
       <button class="deck-mode-tab active" data-mode="quant" id="tabModeQuant">
-        <span>⚡</span> 量化博弈罗盘
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.85;"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        量化博弈罗盘
       </button>
       <button class="deck-mode-tab" data-mode="catalyst" id="tabModeCatalyst">
-        <span>📰</span> 操盘参考资讯
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.85;"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+        操盘参考资讯
       </button>
       <a href="compass-guide.html" target="_blank" class="deck-mode-guide-link" title="查看量化博弈罗盘极简图解手册 (ELI5版)" style="margin-left: auto; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--accent); text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(245, 166, 35, 0.08); border: 1px solid rgba(245, 166, 35, 0.25); font-weight: 500;">
-        <span>📖</span> 5分钟新手指南 ↗
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.9;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        5分钟新手指南 ↗
       </a>
     </div>
 
@@ -1697,7 +1828,8 @@
         <div class="qp-card">
           <div class="qp-card-head">
             <div class="qp-card-title">
-              <span>🧭</span> 多空全盘体检
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="2"/></svg>
+              多空全盘体检
             </div>
             <span class="qp-badge neutral" id="qpOverallGrade">计算中…</span>
           </div>
@@ -1796,13 +1928,15 @@
         <div class="qp-card">
           <div class="qp-card-head">
             <div class="qp-card-title">
-              <span>⚡</span> 今日人话实战建议
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+              今日实战操盘对策
             </div>
             <span class="qp-badge warn" id="qpDirectiveLevel">实时信号</span>
           </div>
           <div class="qp-decision-box">
+            <!-- 第1层：态势定性与主导方向 -->
             <div class="qp-directive-hero trim" id="qpDirectiveHero">
-              <div>
+              <div style="min-width: 0;">
                 <div class="qp-action-title" id="qpActionTitle">锁定观望</div>
                 <div class="qp-action-sub" id="qpActionSub">常态波动，筹码有序换手中</div>
               </div>
@@ -1810,15 +1944,72 @@
                 改价目标 ↗
               </button>
             </div>
-            <div class="qp-rule-banner">
-              <span class="qp-rule-code-tag" id="qpRuleCode">多空均衡</span>
-              <span style="font-weight: 600; color: var(--text);" id="qpRuleTitle">多空处于均衡区间</span>
+
+            <!-- 第2层：关键攻防点位速查 (一体化微光攻防标尺) -->
+            <div class="qp-levels-rail">
+              <div class="qp-rail-cell" title="关键防守支撑点位（取日均线支撑或分时低点）">
+                <div class="qp-rail-top">
+                  <span class="qp-rail-led support"></span>
+                  <span class="qp-rail-label">第一支撑</span>
+                  <span class="qp-rail-tag" id="qpSupportTag">支撑</span>
+                </div>
+                <div class="qp-rail-price num" id="qpSupportVal">--</div>
+                <div class="qp-rail-dist down" id="qpSupportDist">--</div>
+              </div>
+
+              <div class="qp-rail-cell" title="全天加权平均买入成本线 (分水岭)">
+                <div class="qp-rail-top">
+                  <span class="qp-rail-led vwap"></span>
+                  <span class="qp-rail-label">分时均价</span>
+                  <span class="qp-rail-tag">VWAP</span>
+                </div>
+                <div class="qp-rail-price num" id="qpVwapVal">--</div>
+                <div class="qp-rail-dist" id="qpVwapDist">--</div>
+              </div>
+
+              <div class="qp-rail-cell" title="上方第一反弹压制位（取关键均线反压或分时高点）">
+                <div class="qp-rail-top">
+                  <span class="qp-rail-led resist"></span>
+                  <span class="qp-rail-label">第一阻力</span>
+                  <span class="qp-rail-tag" id="qpResistTag">阻力</span>
+                </div>
+                <div class="qp-rail-price num" id="qpResistVal">--</div>
+                <div class="qp-rail-dist up" id="qpResistDist">--</div>
+              </div>
             </div>
-            <div class="qp-rule-desc" id="qpRuleDesc">
-              当前标的分时运行平稳，未触发极限偏离或量价顶底背离警戒线。
+
+            <!-- 第3层：持仓 vs 空仓 双视角操盘对策 -->
+            <div class="qp-tactics-split">
+              <div class="qp-tactic-panel holder">
+                <div class="qp-tactic-head">
+                  <span class="qp-tactic-dot holder"></span>
+                  <span class="qp-tactic-role">持仓者对策</span>
+                </div>
+                <div class="qp-tactic-content" id="tacticHolder">
+                  数据就绪中，等待量化模型评估持仓风险防线…
+                </div>
+              </div>
+              <div class="qp-tactic-panel watcher">
+                <div class="qp-tactic-head">
+                  <span class="qp-tactic-dot watcher"></span>
+                  <span class="qp-tactic-role">空仓者对策</span>
+                </div>
+                <div class="qp-tactic-content" id="tacticWatcher">
+                  数据就绪中，等待量化模型测算入场信号…
+                </div>
+              </div>
             </div>
-            <div class="qp-tactic-box" id="qpTacticBox">
-              <b>实战操盘原则：</b>持仓者沿分时均线保护原则正常持股，未持仓者等待放量突破或缩量回踩 VWAP 企稳时再行布局。
+
+            <!-- 第4层：快捷预警联动按钮条 -->
+            <div class="qp-action-row">
+              <button class="qp-preset-btn" id="btnSetSupportAlarm" title="一键将计算出的第一支撑位设置为下限防守预警">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                设支撑为下限预警
+              </button>
+              <button class="qp-preset-btn" id="btnSetResistAlarm" title="一键将计算出的第一阻力位设置为上限止盈预警">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                设阻力为上限预警
+              </button>
             </div>
           </div>
         </div>
@@ -1827,7 +2018,8 @@
         <div class="qp-card">
           <div class="qp-card-head">
             <div class="qp-card-title">
-              <span>🌊</span> 主力大资金买卖流
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              主力大资金买卖流
             </div>
             <div class="qp-tick-filter-bar" id="qpTickFilterBar">
               <button class="qp-tick-filter-btn active" data-min="0">全部</button>
@@ -1849,7 +2041,7 @@
       <div class="cc-header">
         <div class="cc-header-left">
           <div class="cc-title-wrap">
-            <span class="cc-icon">⚡</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             <span class="cc-title">异动催化与操盘参考</span>
             <span class="cc-status-tag" id="ccStatusTag">当日有效</span>
           </div>
@@ -2119,10 +2311,18 @@ const els = {
   qpActionTitle: document.getElementById('qpActionTitle'),
   qpActionSub: document.getElementById('qpActionSub'),
   qpQuickAdjustBtn: document.getElementById('qpQuickAdjustBtn'),
-  qpRuleCode: document.getElementById('qpRuleCode'),
-  qpRuleTitle: document.getElementById('qpRuleTitle'),
-  qpRuleDesc: document.getElementById('qpRuleDesc'),
-  qpTacticBox: document.getElementById('qpTacticBox'),
+  qpSupportVal: document.getElementById('qpSupportVal'),
+  qpSupportDist: document.getElementById('qpSupportDist'),
+  qpSupportTag: document.getElementById('qpSupportTag'),
+  qpVwapVal: document.getElementById('qpVwapVal'),
+  qpVwapDist: document.getElementById('qpVwapDist'),
+  qpResistVal: document.getElementById('qpResistVal'),
+  qpResistDist: document.getElementById('qpResistDist'),
+  qpResistTag: document.getElementById('qpResistTag'),
+  tacticHolder: document.getElementById('tacticHolder'),
+  tacticWatcher: document.getElementById('tacticWatcher'),
+  btnSetSupportAlarm: document.getElementById('btnSetSupportAlarm'),
+  btnSetResistAlarm: document.getElementById('btnSetResistAlarm'),
   qpTickFilterBar: document.getElementById('qpTickFilterBar'),
   qpTickList: document.getElementById('qpTickList')
 };
@@ -3214,39 +3414,88 @@ const QuantCompassEngine = (function() {
     if (buyRatio >= 55) hintBuy = '买方主动往上抢';
     else if (buyRatio <= 45) hintBuy = '卖方主动往下砸';
 
+    const isA = /^sh|^sz|^bj/.test(code);
+    const decimals = q.decimals || (isA ? 2 : 3);
+
+    // --- 关键量化攻防点位测算 (第一支撑、第一阻力、成本分水岭) ---
+    const supportCandidates = [];
+    if (vwap > 0 && vwap < price) supportCandidates.push({ val: vwap, label: '分时成本' });
+    if (ma5 != null && ma5 < price) supportCandidates.push({ val: ma5, label: 'MA5支撑' });
+    if (ma10 != null && ma10 < price) supportCandidates.push({ val: ma10, label: 'MA10支撑' });
+    if (ma20 != null && ma20 < price) supportCandidates.push({ val: ma20, label: 'MA20支撑' });
+    if (q.low > 0 && q.low < price) supportCandidates.push({ val: q.low, label: '日内低点' });
+
+    let supportLevel = null;
+    if (supportCandidates.length > 0) {
+      supportCandidates.sort((a, b) => b.val - a.val);
+      supportLevel = supportCandidates[0];
+    } else {
+      const fallbackVal = +(price * 0.985).toFixed(decimals);
+      supportLevel = { val: fallbackVal, label: '极限防线' };
+    }
+
+    const resistCandidates = [];
+    if (vwap > 0 && vwap > price) resistCandidates.push({ val: vwap, label: '分时反压' });
+    if (ma5 != null && ma5 > price) resistCandidates.push({ val: ma5, label: 'MA5反压' });
+    if (ma10 != null && ma10 > price) resistCandidates.push({ val: ma10, label: 'MA10反压' });
+    if (ma20 != null && ma20 > price) resistCandidates.push({ val: ma20, label: 'MA20反压' });
+    if (q.high > 0 && q.high > price) resistCandidates.push({ val: q.high, label: '日内高点' });
+
+    let resistLevel = null;
+    if (resistCandidates.length > 0) {
+      resistCandidates.sort((a, b) => a.val - b.val);
+      resistLevel = resistCandidates[0];
+    } else {
+      const fallbackVal = +(price * 1.02).toFixed(decimals);
+      resistLevel = { val: fallbackVal, label: '冲刺目标' };
+    }
+
+    const supportDistPct = (price > 0) ? +(((supportLevel.val - price) / price) * 100).toFixed(2) : 0;
+    const resistDistPct = (price > 0) ? +(((resistLevel.val - price) / price) * 100).toFixed(2) : 0;
+    const vwapDistPct = (price > 0 && vwap > 0) ? +(((vwap - price) / price) * 100).toFixed(2) : 0;
+
+    const keyLevels = {
+      support: { price: supportLevel.val, label: supportLevel.label, distPct: supportDistPct },
+      resist: { price: resistLevel.val, label: resistLevel.label, distPct: resistDistPct },
+      vwap: { price: vwap, distPct: vwapDistPct }
+    };
+
     let rule = null;
     if (biasPct >= 3.0) {
       rule = {
         code: '冲高落袋',
         action: '分批减仓',
-        actionText: '涨得太猛，卖掉一半！',
+        actionText: '涨得太急太猛，卖掉一半！',
         actionLevel: 'trim',
-        title: '现价严重脱离今天买入成本线 (严重超买)',
-        desc: '今天涨势过急过猛，当前价格已经比今天所有人平均买入成本高出了 +' + biasPct + '%。大资金极易借高位冲刺突然跳水砸盘，浮盈非常容易缩水。',
-        tactic: '小白建议：手里有赚的抓紧卖出一半落袋为安，没买的千万管住手不要盲目追高！',
-        hudText: '涨得过急偏离均价 (+' + biasPct + '%) [卖掉一半]'
+        title: '现价脱离成本线 (+' + biasPct + '%)，谨防主力急刹跳水',
+        desc: '现价已经大幅高于全天平均买入成本，技术指标严重超买，主力资金随时可能借高位流动性砸盘兑现利润。',
+        holderTactic: '持仓者：涨幅过大浮盈丰厚，建议在阻力位 ' + resistLevel.val.toFixed(decimals) + ' 附近分批卖出一半锁定利润，留半仓推移动止盈。',
+        watcherTactic: '空仓者：已进入击鼓传花超买区，千万管住手不要盲目追高，等待缩量回踩成本线企稳。',
+        hudText: '涨势过急偏离均价 (+' + biasPct + '%) [卖掉一半]'
       };
     } else if (price < vwap && biasPct <= -1.5 && q.changePct < 0) {
       if (trendScore >= 65) {
         rule = {
           code: '多头回踩',
           action: '逢低观察',
-          actionText: '均线多头回踩，暂莫恐慌！',
+          actionText: '多头趋势回踩，暂莫恐慌！',
           actionLevel: 'neutral',
-          title: '日线多头排列中日内洗盘回踩',
-          desc: '虽然跌破分时均价线（偏离 ' + biasPct + '%），但日线级别呈多头排列，中短期趋势完好，多为盘中洗盘或浮筹清理。',
-          tactic: '小白建议：先看下方关键日均线支撑，只要未破日线防线可多观察，无须盲目恐慌杀跌。',
+          title: '日线多头形态完好，盘中洗盘清理浮筹',
+          desc: '虽然日内跌破分时均价线（偏离 ' + biasPct + '%），但大级别日均线保持多头排列，属于健康回踩。',
+          holderTactic: '持仓者：日均线仍呈多头排列，紧盯第一防守线 ' + supportLevel.val.toFixed(decimals) + ' (' + supportLevel.label + ')，不破日线防线可安心持股。',
+          watcherTactic: '空仓者：回踩支撑位企稳且不破时，是极佳的右侧低吸契机，可观察盘口企稳单寻找买点。',
           hudText: '多头结构日内洗盘回踩 (' + biasPct + '%) [观察企稳]'
         };
       } else {
         rule = {
           code: '破位防守',
-          action: '坚决止损',
-          actionText: '跌破底线，果断撤退！',
+          action: '果断撤退',
+          actionText: '跌破成本底线，果断撤退！',
           actionLevel: 'stop',
-          title: '跌破今天全天平均买入成本线 (均线破位)',
-          desc: '现价已经下穿今天所有人买入的生命成本线，意味着今天买入的大多数人都已经浮亏被套，空方全面打压，继续下跌概率大。',
-          tactic: '小白建议：不要抱有侥幸心理逆势扛单，先撤出来保住本金，等企稳了再看！',
+          title: '下穿全天持仓成本线，空方打压下行',
+          desc: '现价已下穿所有人买入的生命成本线，意味着今日买入者多数浮亏被套，多方承接疲软，继续下探概率大。',
+          holderTactic: '持仓者：第一支撑位 ' + supportLevel.val.toFixed(decimals) + ' 若继续失守，切勿抱有侥幸逆势抗单，果断减仓或止损保本。',
+          watcherTactic: '空仓者：空方全面打压且未见止跌，下方接盘孱弱，场外管住手耐心等待大势走稳。',
           hudText: '跌破全天成本底线 (' + biasPct + '%) [果断撤退]'
         };
       }
@@ -3257,67 +3506,97 @@ const QuantCompassEngine = (function() {
           action: '谨慎观望',
           actionText: '空头弱势反弹，切莫追高！',
           actionLevel: 'neutral',
-          title: '日线空头排列下的日内放量冲高 (疑似诱多)',
-          desc: '虽然盘中量比放大到 ' + volRatio.toFixed(1) + ' 倍，但日线均线处于空头压制形态，属于典型的逆势反弹，上方套牢盘抛压沉重。',
-          tactic: '小白建议：空头大趋势下放量往往是主力拉高出货或诱多，轻仓或空仓者切忌盲目跟买，已有持仓可借机减磅。',
+          title: '日线空头压制下的盘中脉冲 (疑似诱多)',
+          desc: '虽然盘中量比放大到 ' + volRatio.toFixed(1) + ' 倍，但大级别均线仍处于空头压制形态，属于逆势反抽，上方套牢抛压沉重。',
+          holderTactic: '持仓者：上方受制于 ' + resistLevel.label + ' ' + resistLevel.val.toFixed(decimals) + '，反弹往往是减亏撤退契机，逢高减仓为宜。',
+          watcherTactic: '空仓者：空头大趋势逆势脉冲多为诱多出逃，上方套牢盘沉重，切忌跟风追买。',
           hudText: '空头压制下日内脉冲 (' + volRatio.toFixed(1) + '倍) [防范诱多]'
         };
       } else {
         rule = {
           code: '放量主攻',
-          action: '顺势跟买',
-          actionText: '主力爆量，顺势跟进！',
+          action: '顺势跟进',
+          actionText: '主力爆量进攻，顺势跟进！',
           actionLevel: 'buy',
-          title: '成交量比平时放大数倍且价格强势拉升',
-          desc: '成交热度是平时的 ' + volRatio.toFixed(1) + ' 倍，价涨量增而且稳稳站在成本线上方，有大资金真金白银进场扫货进攻。',
-          tactic: '小白建议：可以顺势少量买入或继续持股待涨，只要不跌破均线就可以一直拿着。',
+          title: '量比放大至 ' + volRatio.toFixed(1) + ' 倍，价量双升站稳生命线',
+          desc: '成交热度是平时的 ' + volRatio.toFixed(1) + ' 倍，价涨量增且稳稳站在成本线上方，有大资金真金白银进场扫货进攻。',
+          holderTactic: '持仓者：大资金真金白银扫货，以分时均价线 ' + vwap.toFixed(decimals) + ' 为保护位，坚定持股享受主升浪。',
+          watcherTactic: '空仓者：可顺势小仓位跟随大资金吃单节奏进场，若放量突破 ' + resistLevel.val.toFixed(decimals) + ' 可适当加码。',
           hudText: '成交量放大 ' + volRatio.toFixed(1) + ' 倍爆量进攻 [顺势跟进]'
         };
       }
-    } else if (q.totalBidVol > q.totalAskVol * 2.5 && q.changePct < 0 && buyRatio < 45) {
-      rule = {
-        code: '防假托单',
-        action: '逢高离场',
-        actionText: '小心假托单，趁高撤离！',
-        actionLevel: 'stop',
-        title: '下方挂着巨量买单但价格却不涨反跌',
-        desc: '买盘挂单密密麻麻看似有大机构兜底，但主动买入的人却极少，这是典型的主力挂假托单制造安全假象，实际正在暗中出货！',
-        tactic: '小白建议：切勿以为挂单多就不会跌，直接向买一卖出离场，谨防主力撤单跳水。',
-        hudText: '警惕大托单虚假防守掩护出逃 [逢高撤离]'
-      };
     } else if (q.totalAskVol > q.totalBidVol * 2.0 && price >= vwap && buyRatio >= 65) {
       if (trendScore <= 40) {
         rule = {
           code: '空头护盘',
           action: '保持谨慎',
-          actionText: '空头趋势吞单，防范假突破！',
+          actionText: '空头趋势吞单，谨防假突破！',
           actionLevel: 'neutral',
-          title: '空头形态下主力主动扫盘 (持续性存疑)',
-          desc: '盘口主动吃掉卖单，但日线仍处于弱势空头压制中，突破有效性打折扣，容易冲高回落。',
-          tactic: '小白建议：空头趋势里不盲信盘口异动，等待日线站上均线企稳后再考虑介入。',
+          title: '盘口主动扫盘但大趋势受压，持续性存疑',
+          desc: '盘口主动吃掉卖单，但日线处于弱势空头压制中，突破有效性打折扣，容易冲高回落。',
+          holderTactic: '持仓者：借主力拉升推升股价至阻力位 ' + resistLevel.val.toFixed(decimals) + ' 时分步减亏，落袋为安。',
+          watcherTactic: '空仓者：大周期空头未改，单笔大单扫盘难以扭转趋势，保持观望不追。',
           hudText: '空头排列下吞单异动 [观望防假突破]'
         };
       } else {
         rule = {
           code: '强势吞单',
-          action: '顺势跟买',
-          actionText: '主力扫货，强势吃单！',
+          action: '顺势做多',
+          actionText: '主力扫货吃单，逼空拉升！',
           actionLevel: 'buy',
-          title: '上方沉重卖单被主力大笔一口口吃掉',
+          title: '上方大抛单遭主力一口口吃掉，向上动能强劲',
           desc: '上方挂满大抛单但股价不跌反涨，大资金正不计成本主动向上扫盘抢货，抛盘即将被扫光逼空大涨。',
-          tactic: '小白建议：观察上方大卖单被吃掉八九成时，可以果断小仓位跟进买入。',
+          holderTactic: '持仓者：主力进攻欲望坚决，盘口承接有力，持股坐轿享受逼空行情。',
+          watcherTactic: '空仓者：上方压制盘被扫光时，可立即小仓位挂单跟进抢筹。',
           hudText: '上方大抛单遭主力扫货吞噬 [跟买看多]'
         };
       }
+    } else if (q.totalBidVol > q.totalAskVol * 2.5 && q.changePct < 0 && buyRatio < 45) {
+      rule = {
+        code: '防假托单',
+        action: '逢高撤离',
+        actionText: '警惕虚假托单，趁高撤离！',
+        actionLevel: 'stop',
+        title: '下方挂巨量买单却跌跌不休，疑似主力掩护出货',
+        desc: '买盘挂单密密麻麻看似有大机构兜底，但主动买入者极少，这是典型的主力挂假托单制造安全假象，暗中出逃！',
+        holderTactic: '持仓者：下方买盘随时可能大笔撤单引发跳水，趁有买单向买一卖出离场。',
+        watcherTactic: '空仓者：切勿误以为买单多就是有支撑，此为典型诱多，坚决不抄底。',
+        hudText: '警惕大托单虚假防守掩护出逃 [逢高撤离]'
+      };
+    } else if (overall <= 45 || trendScore <= 35 || shapeScore <= 35) {
+      rule = {
+        code: '弱势承压',
+        action: '防守观望',
+        actionText: '走势整体偏弱，防守优先！',
+        actionLevel: 'stop',
+        title: '日内与均线双重承压，资金承接力明显不足',
+        desc: '标的评分处于弱势区间，日线均线或分时形态表现偏软，抛压仍需进一步换手消化。',
+        holderTactic: '持仓者：价格运行在均线压制下方，以第一支撑 ' + supportLevel.val.toFixed(decimals) + ' (' + supportLevel.label + ') 为防线，失守宜主动减仓。',
+        watcherTactic: '空仓者：空方主导且未现企稳拐点，右侧确认前耐住性子保持空仓观望。',
+        hudText: '弱势格局偏空承压 [防守优先]'
+      };
+    } else if (overall >= 62) {
+      rule = {
+        code: '多方蓄势',
+        action: '顺势持有',
+        actionText: '多头格局良好，稳健持有！',
+        actionLevel: 'buy',
+        title: '量价结构健康，多方维持盘面优势',
+        desc: '多空综合评分处于强势区间，上涨冲劲与均线支撑配合良好，具备持续上行动能。',
+        holderTactic: '持仓者：沿着支撑位 ' + supportLevel.val.toFixed(decimals) + ' 正常持股，放量突破阻力位 ' + resistLevel.val.toFixed(decimals) + ' 可继续持有。',
+        watcherTactic: '空仓者：若盘中有缩量回踩成本线 ' + vwap.toFixed(decimals) + ' 动作，可考虑分批试建底仓。',
+        hudText: '多方占优蓄势上行 [顺势持股]'
+      };
     } else {
       rule = {
-        code: '稳健持股',
-        action: '安心持股',
-        actionText: '多空均衡，安心拿着！',
+        code: '窄幅整理',
+        action: '锁定观望',
+        actionText: '多空均衡拉锯，安心持股！',
         actionLevel: 'neutral',
         title: '价格在平稳区间换手，主力无异常动作',
         desc: '当前成交量和价格都在正常范围内波动，既没有主力爆拉也没有资金恶性砸盘，市场处于平稳博弈状态。',
-        tactic: '小白建议：手里有股票的安心拿好，不用被盘中一两毛钱的波动吓到；没建仓的耐心等大方向明朗。',
+        holderTactic: '持仓者：波动处于平稳常态范围，只要不破支撑位 ' + supportLevel.val.toFixed(decimals) + '，无须被分时小幅波动惊扰。',
+        watcherTactic: '空仓者：无明显单边方向，多看少动，等待出现明显放量突破或破位信号。',
         hudText: ''
       };
     }
@@ -3358,6 +3637,7 @@ const QuantCompassEngine = (function() {
         ma10,
         ma20
       },
+      keyLevels,
       rule
     };
   }
@@ -3990,7 +4270,7 @@ function updateQuantCompassElements(analysis) {
     els.qpHintTrend.textContent = analysis.hints.trend;
   }
 
-  // 中栏：决策指令
+  // 中栏：决策指令与攻防标尺
   if (els.qpDirectiveHero) {
     els.qpDirectiveHero.className = 'qp-directive-hero ' + analysis.rule.actionLevel;
   }
@@ -4000,12 +4280,47 @@ function updateQuantCompassElements(analysis) {
     els.qpDirectiveLevel.textContent = analysis.rule.action;
     els.qpDirectiveLevel.className = 'qp-badge ' + (analysis.rule.actionLevel === 'buy' ? 'bull' : (analysis.rule.actionLevel === 'stop' ? 'bear' : (analysis.rule.actionLevel === 'trim' ? 'warn' : 'neutral')));
   }
-  if (els.qpRuleCode) els.qpRuleCode.textContent = analysis.rule.code;
-  if (els.qpRuleTitle) els.qpRuleTitle.textContent = analysis.rule.title;
-  if (els.qpRuleDesc) els.qpRuleDesc.textContent = analysis.rule.desc;
-  if (els.qpTacticBox) {
-    const cleanTactic = (analysis.rule.tactic || '').replace(/^(实战操盘原则|实战原则|小白建议)[：:]\s*/, '');
-    els.qpTacticBox.innerHTML = '<b>小白实战建议：</b>' + cleanTactic;
+
+  // 攻防标尺关键点位渲染
+  const kl = analysis.keyLevels;
+  if (kl) {
+    const isA = /^sh|^sz|^bj/.test(currentQuantCode || '');
+    const decimals = (quotes[currentQuantCode] && quotes[currentQuantCode].decimals) || (isA ? 2 : 3);
+
+    if (els.qpSupportVal) {
+      els.qpSupportVal.textContent = kl.support.price > 0 ? kl.support.price.toFixed(decimals) : '--';
+    }
+    if (els.qpSupportDist) {
+      els.qpSupportDist.textContent = kl.support.price > 0 ? (kl.support.distPct + '% (距支撑)') : '--';
+    }
+    if (els.qpSupportTag) {
+      els.qpSupportTag.textContent = kl.support.label || '支撑';
+    }
+
+    if (els.qpVwapVal) {
+      els.qpVwapVal.textContent = kl.vwap.price > 0 ? kl.vwap.price.toFixed(decimals) : '--';
+    }
+    if (els.qpVwapDist) {
+      els.qpVwapDist.textContent = kl.vwap.price > 0 ? (kl.vwap.distPct > 0 ? '+' : '') + kl.vwap.distPct + '% (偏离)' : '--';
+    }
+
+    if (els.qpResistVal) {
+      els.qpResistVal.textContent = kl.resist.price > 0 ? kl.resist.price.toFixed(decimals) : '--';
+    }
+    if (els.qpResistDist) {
+      els.qpResistDist.textContent = kl.resist.price > 0 ? ('+' + kl.resist.distPct + '% (距阻力)') : '--';
+    }
+    if (els.qpResistTag) {
+      els.qpResistTag.textContent = kl.resist.label || '阻力';
+    }
+  }
+
+  // 双视角策略面板渲染
+  if (els.tacticHolder) {
+    els.tacticHolder.textContent = analysis.rule.holderTactic || '保持常规防守策略。';
+  }
+  if (els.tacticWatcher) {
+    els.tacticWatcher.textContent = analysis.rule.watcherTactic || '场外多看少动，等待信号确认。';
   }
 }
 
@@ -5316,6 +5631,54 @@ if (els.qpQuickAdjustBtn) {
   els.qpQuickAdjustBtn.addEventListener('click', () => {
     if (selectedId) {
       openEditModal(selectedId);
+    }
+  });
+}
+
+/* 攻防标尺：一键套用支撑为下限防守预警 */
+if (els.btnSetSupportAlarm) {
+  els.btnSetSupportAlarm.addEventListener('click', () => {
+    if (!selectedId) {
+      toast('请先在监控列表中选中标的');
+      return;
+    }
+    const item = monitors.find(m => m.id === selectedId);
+    if (!item) return;
+    const q = quotes[item.code];
+    const an = QuantCompassEngine.analyze(item.code, q, currentChartRows);
+    if (an && an.keyLevels && an.keyLevels.support && an.keyLevels.support.price > 0) {
+      item.lowerTarget = an.keyLevels.support.price;
+      if (item.status === 'paused') item.status = 'watching';
+      saveMonitors();
+      renderTable();
+      if (!isChartCollapsed) renderSelectedChart();
+      toast('已将第一支撑位 ' + an.keyLevels.support.price + ' 设为下限防守预警');
+    } else {
+      toast('支撑点位计算中，请稍候重试');
+    }
+  });
+}
+
+/* 攻防标尺：一键套用阻力为上限止盈预警 */
+if (els.btnSetResistAlarm) {
+  els.btnSetResistAlarm.addEventListener('click', () => {
+    if (!selectedId) {
+      toast('请先在监控列表中选中标的');
+      return;
+    }
+    const item = monitors.find(m => m.id === selectedId);
+    if (!item) return;
+    const q = quotes[item.code];
+    const an = QuantCompassEngine.analyze(item.code, q, currentChartRows);
+    if (an && an.keyLevels && an.keyLevels.resist && an.keyLevels.resist.price > 0) {
+      item.upperTarget = an.keyLevels.resist.price;
+      if (item.status === 'paused') item.status = 'watching';
+      saveMonitors();
+      renderTable();
+      if (!isChartCollapsed) renderSelectedChart();
+      toast('已将第一阻力位 ' + an.keyLevels.resist.price + ' 设为上限止盈预警');
+    } else {
+      toast('阻力点位计算中，请稍候重试');
     }
   });
 }
