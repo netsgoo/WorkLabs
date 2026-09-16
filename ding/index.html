@@ -42,33 +42,164 @@
   .brand .logo { width: 30px; height: 30px; flex: 0 0 30px; }
   .brand h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
   .brand small { display: block; color: var(--text-faint); font-size: 11px; font-weight: 400; margin-top: 1px; }
-  .head-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .head-actions { display: flex; align-items: center; gap: 10px; }
 
-  .setting-item { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-faint); }
-  .setting-item select {
+  /* 设置入口与气泡浮层 */
+  .settings-wrap { position: relative; }
+  .settings-trigger {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 30px; padding: 0 12px; font-size: 12px;
+    border-radius: 8px; transition: background .15s, border-color .15s, color .15s;
+  }
+  .settings-trigger.active {
+    background: rgba(245, 166, 35, 0.12);
+    border-color: rgba(245, 166, 35, 0.45);
+    color: var(--accent);
+  }
+  .settings-popover {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    width: 320px;
+    background: #111a2d;
+    border: 1px solid rgba(148, 173, 214, 0.18);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .settings-popover.open {
+    display: flex;
+    animation: popover-drop .15s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  @keyframes popover-drop {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .popover-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  }
+  .popover-title {
+    font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: 0.3px;
+  }
+  .popover-close {
+    background: transparent; border: none; color: var(--text-faint);
+    cursor: pointer; padding: 2px 6px; font-size: 14px; line-height: 1; border-radius: 4px;
+    transition: color .15s, background .15s;
+  }
+  .popover-close:hover { color: var(--text); background: rgba(148, 173, 214, 0.1); }
+  .popover-section { display: flex; flex-direction: column; gap: 10px; }
+  .popover-section-label {
+    font-size: 11px; font-weight: 600; color: var(--text-faint);
+    letter-spacing: 0.5px;
+  }
+  .popover-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .popover-row .row-label { font-size: 12px; color: var(--text); }
+  .popover-row .row-desc { font-size: 11px; color: var(--text-faint); margin-top: 1px; }
+  .popover-select {
     background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
-    border-radius: 6px; padding: 4px 8px; font-size: 12px; outline: none; cursor: pointer;
+    border-radius: 6px; padding: 5px 8px; font-size: 12px; outline: none; cursor: pointer;
+    min-width: 110px;
   }
-  .setting-item.volume-group { gap: 8px; }
-  .setting-item input[type="range"] {
-    width: 76px; height: 5px; accent-color: var(--accent); cursor: pointer;
-    vertical-align: middle;
+  .popover-select:focus { border-color: rgba(245, 166, 35, 0.5); }
+  .popover-range {
+    width: 80px; height: 5px; accent-color: var(--accent); cursor: pointer;
   }
-  #volumeVal { color: var(--text); min-width: 32px; font-weight: 500; }
+  .volume-ctrl { display: flex; align-items: center; gap: 8px; }
+  .btn-xs { height: 26px; padding: 0 8px; font-size: 11px; border-radius: 5px; }
+
+  /* 现代滑动开关 Toggle Switch */
+  .switch-toggle {
+    position: relative; display: inline-block; width: 36px; height: 20px;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .switch-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .switch-slider {
+    position: absolute; inset: 0; background-color: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 20px;
+    transition: background-color .2s, border-color .2s;
+  }
+  .switch-slider:before {
+    position: absolute; content: ""; height: 14px; width: 14px;
+    left: 2px; bottom: 2px; background-color: var(--text-dim);
+    border-radius: 50%; transition: transform .2s, background-color .2s;
+  }
+  .switch-toggle input:checked + .switch-slider {
+    background-color: var(--accent-soft);
+    border-color: rgba(245, 166, 35, 0.5);
+  }
+  .switch-toggle input:checked + .switch-slider:before {
+    transform: translateX(16px);
+    background-color: var(--accent);
+  }
+
+  .popover-footer {
+    padding-top: 10px; border-top: 1px solid var(--line);
+  }
+  .popover-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .popover-btns .btn { width: 100%; }
+
+  @media (max-width: 600px) {
+    .settings-popover {
+      position: fixed;
+      top: 62px;
+      left: 14px;
+      right: 14px;
+      width: auto;
+      max-width: 380px;
+      margin-left: auto;
+    }
+  }
 
   .status-pill {
     display: inline-flex; align-items: center; gap: 7px;
     padding: 5px 12px; border-radius: 999px; font-size: 12px;
     border: 1px solid var(--line); color: var(--text-dim); background: rgba(148,173,214,.06);
+    user-select: none; transition: all .2s;
   }
+  .status-pill.clickable { cursor: pointer; }
+  .status-pill.clickable:hover { border-color: rgba(245,166,35,.5); }
   .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-faint); }
   .status-pill.on .dot { background: var(--ok); box-shadow: 0 0 8px rgba(47,209,137,.8); }
   .status-pill.on { color: #bfe8d6; border-color: rgba(47,209,137,.4); }
+  .status-pill.backup .dot { background: var(--accent); box-shadow: 0 0 8px rgba(245,166,35,.8); }
+  .status-pill.backup { color: #ffe6b0; border-color: rgba(245,166,35,.45); background: rgba(245,166,35,.08); }
+  .status-pill.error .dot { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+  .status-pill.error { color: #ff9f9f; border-color: rgba(255,71,87,.5); background: rgba(255,71,87,.12); animation: pill-pulse 1s infinite alternate; }
   .status-pill.triggered .dot { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
   .status-pill.triggered { color: #ff9f9f; border-color: rgba(255,71,87,.5); background: rgba(255,71,87,.1); animation: pill-pulse 1s infinite alternate; }
   .status-pill.throttled .dot { background: #8fa3c3; box-shadow: 0 0 6px rgba(148,173,214,.4); }
   .status-pill.throttled { color: #8fa3c3; border-color: rgba(148,173,214,.3); background: rgba(148,173,214,.08); }
   @keyframes pill-pulse { 0% { opacity: 0.85; } 100% { opacity: 1; } }
+
+  /* 数据时效性过期 */
+  tr.row-stale td { opacity: 0.65; }
+  .stale-tag { font-size: 10px; color: #ff9f9f; background: rgba(255,71,87,.15); padding: 1px 4px; border-radius: 3px; margin-left: 4px; font-weight: normal; }
+
+  /* 价格跳动微光动画 */
+  @keyframes tick-up {
+    0% { background-color: rgba(255, 93, 93, 0.32); }
+    100% { background-color: transparent; }
+  }
+  @keyframes tick-down {
+    0% { background-color: rgba(23, 201, 143, 0.32); }
+    100% { background-color: transparent; }
+  }
+  .tick-flash-up {
+    animation: tick-up 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+    border-radius: 4px;
+    padding: 1px 3px;
+  }
+  .tick-flash-down {
+    animation: tick-down 0.75s cubic-bezier(0.2, 0, 0.2, 1);
+    border-radius: 4px;
+    padding: 1px 3px;
+  }
 
   /* 通用卡片容器 */
   .card {
@@ -233,42 +364,87 @@
       </div>
     </div>
     <div class="head-actions">
-      <div class="setting-item">
-        <label for="intervalSelect">刷新</label>
-        <select id="intervalSelect">
-          <option value="3000">3秒</option>
-          <option value="5000" selected>5秒（推荐）</option>
-          <option value="10000">10秒</option>
-          <option value="30000">30秒</option>
-        </select>
-      </div>
-      <div class="setting-item">
-        <label for="soundSelect">音效</label>
-        <select id="soundSelect">
-          <option value="chime" selected>经典和弦</option>
-          <option value="radar">急促雷达</option>
-          <option value="bell">柔和铃声</option>
-          <option value="siren">警报警笛</option>
-          <option value="mute">静音模式</option>
-        </select>
-      </div>
-      <div class="setting-item volume-group">
-        <label for="volumeRange">音量 <span id="volumeVal" class="num">80%</span></label>
-        <input type="range" id="volumeRange" min="0" max="100" step="5" value="80">
-      </div>
-      <div class="setting-item" title="所有标的处于休市期间自动切换为60秒节流轮询">
-        <label for="throttleToggle" style="cursor:pointer; display:inline-flex; align-items:center; gap:4px;">
-          <input type="checkbox" id="throttleToggle" checked style="accent-color:var(--accent); cursor:pointer;">
-          <span>休市节流</span>
-        </label>
-      </div>
-      <button id="testSoundBtn" class="btn btn-ghost btn-sm" title="点击试听当前音效与音量">🔊 试听</button>
-      <button id="exportBtn" class="btn btn-ghost btn-sm" title="导出全部监控项与设置为 JSON 备份文件">📥 导出</button>
-      <button id="importBtn" class="btn btn-ghost btn-sm" title="从 JSON 备份文件恢复监控项">📤 导入</button>
-      <input type="file" id="importFileInput" accept=".json" style="display: none;">
-      <div id="globalPill" class="status-pill on">
+      <div id="globalPill" class="status-pill on" title="当前实时盯盘运行状态">
         <span class="dot"></span>
         <span id="globalStatusText">监控就绪</span>
+      </div>
+      <div class="settings-wrap">
+        <button id="settingsToggleBtn" class="btn btn-ghost btn-sm settings-trigger" aria-label="打开设置" title="偏好与数据设置">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          <span>设置</span>
+        </button>
+
+        <div id="settingsPopover" class="settings-popover" role="dialog" aria-label="偏好设置面板">
+          <div class="popover-header">
+            <span class="popover-title">偏好与数据设置</span>
+            <button id="settingsCloseBtn" class="popover-close" aria-label="关闭设置面板" title="关闭">✕</button>
+          </div>
+
+          <!-- 刷新与节流 -->
+          <div class="popover-section">
+            <div class="popover-section-label">运行与轮询</div>
+            <div class="popover-row">
+              <label for="intervalSelect" class="row-label">刷新间隔</label>
+              <select id="intervalSelect" class="popover-select">
+                <option value="3000">3秒 (高频)</option>
+                <option value="5000" selected>5秒 (推荐)</option>
+                <option value="10000">10秒 (普通)</option>
+                <option value="30000">30秒 (低频)</option>
+              </select>
+            </div>
+            <div class="popover-row">
+              <div>
+                <label for="throttleToggle" class="row-label">休市智能节流</label>
+                <div class="row-desc">标的均休市时自动降频至60秒</div>
+              </div>
+              <label class="switch-toggle" title="所有标的处于休市期间自动切换为60秒节流轮询">
+                <input type="checkbox" id="throttleToggle" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 警报音效 -->
+          <div class="popover-section">
+            <div class="popover-section-label">到价警报音效</div>
+            <div class="popover-row">
+              <label for="soundSelect" class="row-label">提示音效</label>
+              <select id="soundSelect" class="popover-select">
+                <option value="chime" selected>经典和弦</option>
+                <option value="radar">急促雷达</option>
+                <option value="bell">柔和铃声</option>
+                <option value="siren">警报警笛</option>
+                <option value="mute">静音模式</option>
+              </select>
+            </div>
+            <div class="popover-row">
+              <label for="volumeRange" class="row-label">
+                音量 <span id="volumeVal" class="num">80%</span>
+              </label>
+              <div class="volume-ctrl">
+                <input type="range" id="volumeRange" min="0" max="100" step="5" value="80" class="popover-range">
+                <button id="testSoundBtn" class="btn btn-ghost btn-xs" title="点击试听当前音效与音量">🔊 试听</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 数据备份与迁移 -->
+          <div class="popover-section popover-footer">
+            <div class="popover-section-label">配置与数据迁移</div>
+            <div class="popover-btns">
+              <button id="exportBtn" class="btn btn-ghost btn-sm" title="导出全部监控项与设置为 JSON 备份文件">
+                <span>📥</span> 导出备份
+              </button>
+              <button id="importBtn" class="btn btn-ghost btn-sm" title="从 JSON 备份文件恢复监控项">
+                <span>📤</span> 导入恢复
+              </button>
+              <input type="file" id="importFileInput" accept=".json" style="display: none;">
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -406,6 +582,11 @@ let currentSoundType = 'chime';
 let currentVolume = 80;
 let smartThrottleEnabled = true;
 let isThrottling = false;
+let lastAppliedMarketState = 'none';
+let prevPrices = {};          // 上一轮成交价缓存，用于比对跳价动效
+let preciseWakeTimer = null;  // 精准毫秒级开市对齐唤醒定时器
+let currentChartRows = [];    // 当前选中标的的分时序列缓存
+let currentChartCode = null;  // 当前绘制分时图的标的代码
 let audioCtx = null;
 let echartsLib = null;
 let chartInstance = null;
@@ -427,6 +608,9 @@ const els = {
   importFileInput: document.getElementById('importFileInput'),
   globalPill: document.getElementById('globalPill'),
   globalStatusText: document.getElementById('globalStatusText'),
+  settingsToggleBtn: document.getElementById('settingsToggleBtn'),
+  settingsPopover: document.getElementById('settingsPopover'),
+  settingsCloseBtn: document.getElementById('settingsCloseBtn'),
   codeInput: document.getElementById('codeInput'),
   upperInput: document.getElementById('upperInput'),
   lowerInput: document.getElementById('lowerInput'),
@@ -516,29 +700,99 @@ function getBeijingDate() {
   return new Date(utc + (3600000 * 8));
 }
 
-function isMarketTrading(code) {
+/**
+ * 获取指定标的当前市场时态：
+ * - 'trading': 处于连续交易或集合竞价时段
+ * - 'midday': 处于午间休市（11:30/12:00 ~ 13:00）
+ * - 'closed': 全天收盘、早盘未开或周末
+ */
+function getMarketState(code) {
   const bj = getBeijingDate();
   const day = bj.getDay();
-  // 周末休市
-  if (day === 0 || day === 6) return false;
+  // 周末彻底休市
+  if (day === 0 || day === 6) return 'closed';
   const mins = bj.getHours() * 60 + bj.getMinutes();
 
   if (/^hk/.test(code)) {
-    // 港股交易时段：09:30 - 12:00, 13:00 - 16:00
-    const m1 = (mins >= 570 && mins <= 720);
-    const m2 = (mins >= 780 && mins <= 960);
-    return m1 || m2;
+    // 港股：
+    // 09:00 - 09:30 开市前竞价时段；09:30 - 12:00 上午持续交易
+    // 12:00 - 13:00 午间休市
+    // 13:00 - 16:00 下午持续交易（含收市竞价）
+    if ((mins >= 540 && mins <= 720) || (mins >= 780 && mins <= 960)) {
+      return 'trading';
+    }
+    if (mins > 720 && mins < 780) {
+      return 'midday';
+    }
+    return 'closed';
   } else {
-    // A股交易时段：09:30 - 11:30, 13:00 - 15:00
-    const m1 = (mins >= 570 && mins <= 690);
-    const m2 = (mins >= 780 && mins <= 900);
-    return m1 || m2;
+    // A股：
+    // 09:15 - 09:25 开盘集合竞价；09:25 - 09:30 撮合静默期；09:30 - 11:30 上午连续交易
+    // 11:30 - 13:00 午间休市
+    // 13:00 - 15:00 下午连续交易与尾盘集合竞价
+    if ((mins >= 555 && mins <= 690) || (mins >= 780 && mins <= 900)) {
+      return 'trading';
+    }
+    if (mins > 690 && mins < 780) {
+      return 'midday';
+    }
+    return 'closed';
   }
 }
 
+function isMarketTrading(code) {
+  return getMarketState(code) === 'trading';
+}
+
+function getGlobalMarketState() {
+  if (!monitors.length) return 'closed';
+  let hasMidday = false;
+  for (const m of monitors) {
+    const st = getMarketState(m.code);
+    if (st === 'trading') return 'trading';
+    if (st === 'midday') hasMidday = true;
+  }
+  return hasMidday ? 'midday' : 'closed';
+}
+
 function isAnyMarketTrading() {
-  if (!monitors.length) return false;
-  return monitors.some(m => isMarketTrading(m.code));
+  return getGlobalMarketState() === 'trading';
+}
+
+/**
+ * 计算距离下一次开市前2秒精准预热的毫秒差值
+ * 港股开市预热：工作日 08:59:58
+ * 纯A股开市预热：工作日 09:14:58
+ */
+function getMsUntilNextMarketWakeup() {
+  const bj = getBeijingDate();
+  const day = bj.getDay();
+  const h = bj.getHours();
+  const m = bj.getMinutes();
+  const s = bj.getSeconds();
+  const currentSecs = h * 3600 + m * 60 + s;
+
+  const hasHk = monitors.some(it => /^hk/.test(it.code));
+  const targetSecs = hasHk ? (8 * 3600 + 59 * 60 + 58) : (9 * 3600 + 14 * 60 + 58);
+  const marketCloseSecs = hasHk ? (16 * 3600) : (15 * 3600);
+
+  let daysToAdd = 0;
+  if (day === 5 && currentSecs >= marketCloseSecs) {
+    daysToAdd = 3;
+  } else if (day === 6) {
+    daysToAdd = 2;
+  } else if (day === 0) {
+    daysToAdd = 1;
+  } else if (currentSecs >= marketCloseSecs) {
+    daysToAdd = 1;
+  } else if (currentSecs < targetSecs) {
+    daysToAdd = 0;
+  } else {
+    daysToAdd = 1;
+  }
+
+  const diffSecs = (daysToAdd * 86400) + targetSecs - currentSecs;
+  return Math.max(diffSecs * 1000, 2000);
 }
 
 /* ================= 网页标题后台动态轮播闪烁 ================= */
@@ -696,15 +950,41 @@ function syncSoundAlarm() {
   }
 }
 
-/* ================= 批量行情获取（JSONP） ================= */
+/* ================= 腾讯双集群容灾与状态 ================= */
+const QUOTE_CLUSTERS = [
+  { name: '主集群', id: 'qt', host: 'qt.gtimg.cn' },
+  { name: '备用集群', id: 'sqt', host: 'sqt.gtimg.cn' }
+];
+let activeClusterIndex = 0;       // 0: qt.gtimg.cn, 1: sqt.gtimg.cn
+let consecutiveFailures = 0;       // 连续失败次数
+let backupSuccessStreak = 0;      // 备用集群连续成功次数（用于探活回切主集群）
+let lastSuccessTimestamp = 0;     // 最近一次成功拉取行情的时间戳
+const SCRIPT_TIMEOUT_MS = 3500;   // 单次脚本拉取熔断超时时间（毫秒）
+const STALE_THRESHOLD_MS = 45000; // 行情数据失效冻结阈值（45秒）
+
+/* ================= 批量行情获取（JSONP + 超时熔断 + 双集群） ================= */
 function fetchBatchQuotes(codes) {
   if (!codes || !codes.length) return Promise.resolve({});
   return new Promise((resolve) => {
     const s = document.createElement('script');
     const param = codes.join(',');
-    const done = () => {
+    const cluster = QUOTE_CLUSTERS[activeClusterIndex] || QUOTE_CLUSTERS[0];
+    let finished = false;
+    let timer = null;
+
+    const cleanup = () => {
+      if (finished) return;
+      finished = true;
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
       s.onload = s.onerror = null;
-      s.remove();
+      if (s.parentNode) s.remove();
+    };
+
+    const done = () => {
+      cleanup();
       const res = {};
       codes.forEach(c => {
         const raw = window['v_' + c];
@@ -715,13 +995,20 @@ function fetchBatchQuotes(codes) {
       });
       resolve(res);
     };
+
     s.onload = done;
     s.onerror = () => {
-      s.onerror = null;
-      s.remove();
+      cleanup();
       resolve({});
     };
-    s.src = 'https://qt.gtimg.cn/q=' + param + '&_=' + Date.now();
+
+    // 3500ms 超时熔断，防止弱网悬挂阻塞整个轮询流程
+    timer = setTimeout(() => {
+      cleanup();
+      resolve({});
+    }, SCRIPT_TIMEOUT_MS);
+
+    s.src = 'https://' + cluster.host + '/q=' + param + '&_=' + Date.now();
     document.head.appendChild(s);
   });
 }
@@ -795,7 +1082,10 @@ async function renderSelectedChart() {
   els.chartCard.classList.add('show');
 
   try {
-    const r = await fetch('https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=' + item.code);
+    const fetchOptions = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+      ? { signal: AbortSignal.timeout(5000) }
+      : {};
+    const r = await fetch('https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=' + item.code, fetchOptions);
     const j = await r.json();
     const node = j.data && j.data[item.code];
     if (!node || !node.data || !node.data.data || !node.data.data.length) throw new Error('empty');
@@ -810,6 +1100,8 @@ async function renderSelectedChart() {
       }
     });
     if (!rows.length) throw new Error('no valid points');
+    currentChartRows = rows;
+    currentChartCode = item.code;
     els.chartError.style.display = 'none';
     els.chartContainer.style.display = 'block';
     const echarts = await loadChartLib();
@@ -900,6 +1192,50 @@ async function renderSelectedChart() {
   }
 }
 
+/**
+ * 分时图秒级脉搏同步（轻量内存直驱，无需重复发起网络请求）
+ */
+function syncChartPulse() {
+  if (isChartCollapsed || !selectedId || !chartInstance || !currentChartRows || !currentChartRows.length) return;
+  const item = monitors.find(m => m.id === selectedId);
+  if (!item || item.code !== currentChartCode) {
+    renderSelectedChart();
+    return;
+  }
+  const q = quotes[item.code];
+  if (!q || !q.price) return;
+
+  const bj = getBeijingDate();
+  const hh = String(bj.getHours()).padStart(2, '0');
+  const mm = String(bj.getMinutes()).padStart(2, '0');
+  const nowT = hh + ':' + mm;
+
+  const lastRow = currentChartRows[currentChartRows.length - 1];
+  let changed = false;
+
+  if (lastRow && lastRow.t === nowT) {
+    if (lastRow.p !== q.price) {
+      lastRow.p = q.price;
+      changed = true;
+    }
+  } else if (isMarketTrading(item.code)) {
+    currentChartRows.push({ t: nowT, p: q.price });
+    changed = true;
+  }
+
+  if (changed) {
+    chartInstance.setOption({
+      xAxis: {
+        data: currentChartRows.map(r => r.t),
+        axisLabel: { interval: Math.max(1, Math.floor(currentChartRows.length / 6) - 1) }
+      },
+      series: [{
+        data: currentChartRows.map(r => r.p)
+      }]
+    });
+  }
+}
+
 /* ================= 轮询与核心提醒触发 ================= */
 async function pollCycle() {
   if (!monitors.length) {
@@ -915,49 +1251,79 @@ async function pollCycle() {
   }
   const codeList = Array.from(new Set(monitors.map(m => m.code)));
   const latest = await fetchBatchQuotes(codeList);
-  Object.assign(quotes, latest);
+  const fetchedCount = Object.keys(latest).length;
+
+  if (fetchedCount > 0) {
+    // 成功收到行情更新
+    Object.assign(quotes, latest);
+    lastSuccessTimestamp = Date.now();
+    consecutiveFailures = 0;
+
+    // 若当前在备用集群且持续稳定成功达到 10 次，尝试自动探活回切主集群
+    if (activeClusterIndex !== 0) {
+      backupSuccessStreak++;
+      if (backupSuccessStreak >= 10) {
+        activeClusterIndex = 0;
+        backupSuccessStreak = 0;
+      }
+    }
+  } else if (codeList.length > 0) {
+    // 拉取失败（网络中断、超时或节点异常）
+    consecutiveFailures++;
+    // 连续失败 2 次，自动切换至对侧集群
+    if (consecutiveFailures >= 2) {
+      activeClusterIndex = (activeClusterIndex + 1) % QUOTE_CLUSTERS.length;
+      backupSuccessStreak = 0;
+    }
+  }
+
+  // 时效性哨兵判定：数据是否超龄失效
+  const isDataStale = lastSuccessTimestamp > 0 && (Date.now() - lastSuccessTimestamp > STALE_THRESHOLD_MS);
 
   let newlyTriggeredCount = 0;
 
-  monitors.forEach(item => {
-    const q = quotes[item.code];
-    if (!q) return;
-    if (item.status === 'watching') {
-      let hit = false;
-      let reason = null;
-      if (item.upperTarget != null && q.price >= item.upperTarget) {
-        hit = true;
-        reason = 'upper';
-      } else if (item.lowerTarget != null && q.price <= item.lowerTarget) {
-        hit = true;
-        reason = 'lower';
-      }
-      if (hit) {
-        item.status = 'triggered';
-        item.triggeredReason = reason;
-        newlyTriggeredCount++;
-        if ('Notification' in window && Notification.permission === 'granted') {
-          try {
-            const dirDesc = reason === 'upper' ? ('突破上限 ≥ ' + item.upperTarget) : ('跌破下限 ≤ ' + item.lowerTarget);
-            new Notification('股价到价警报 · ' + q.name, {
-              body: q.name + ' 现价 ' + fmt(q.price, q.decimals) + '，已满足条件（' + dirDesc + '）'
-            });
-          } catch (e) {}
+  // 仅在数据有效新鲜且未过期时执行到价判定，避免因陈旧数据误触发或漏报
+  if (!isDataStale) {
+    monitors.forEach(item => {
+      const q = quotes[item.code];
+      if (!q) return;
+      if (item.status === 'watching') {
+        let hit = false;
+        let reason = null;
+        if (item.upperTarget != null && q.price >= item.upperTarget) {
+          hit = true;
+          reason = 'upper';
+        } else if (item.lowerTarget != null && q.price <= item.lowerTarget) {
+          hit = true;
+          reason = 'lower';
+        }
+        if (hit) {
+          item.status = 'triggered';
+          item.triggeredReason = reason;
+          newlyTriggeredCount++;
+          if ('Notification' in window && Notification.permission === 'granted') {
+            try {
+              const dirDesc = reason === 'upper' ? ('突破上限 ≥ ' + item.upperTarget) : ('跌破下限 ≤ ' + item.lowerTarget);
+              new Notification('股价到价警报 · ' + q.name, {
+                body: q.name + ' 现价 ' + fmt(q.price, q.decimals) + '，已满足条件（' + dirDesc + '）'
+              });
+            } catch (e) {}
+          }
         }
       }
-    }
-  });
+    });
 
-  if (newlyTriggeredCount > 0) {
-    saveMonitors();
-    playAlarmSound();
+    if (newlyTriggeredCount > 0) {
+      saveMonitors();
+      playAlarmSound();
+    }
   }
 
-  // 智能休市节流调度
-  const anyTrading = isAnyMarketTrading();
-  const shouldThrottle = smartThrottleEnabled && monitors.length > 0 && !anyTrading;
-  if (shouldThrottle !== isThrottling) {
-    isThrottling = shouldThrottle;
+  // 智能休市调度与时态同步
+  const currentMState = smartThrottleEnabled && monitors.length > 0 ? getGlobalMarketState() : 'trading';
+  isThrottling = currentMState !== 'trading';
+  if (currentMState !== lastAppliedMarketState) {
+    lastAppliedMarketState = currentMState;
     restartTimer();
   }
 
@@ -968,8 +1334,12 @@ async function pollCycle() {
   if (!isChartCollapsed) {
     if (!selectedId || !monitors.some(m => m.id === selectedId)) {
       selectedId = monitors[0].id;
+      renderSelectedChart();
+    } else if (!currentChartCode || currentChartCode !== (monitors.find(m => m.id === selectedId) || {}).code) {
+      renderSelectedChart();
+    } else {
+      syncChartPulse();
     }
-    renderSelectedChart();
   }
 }
 
@@ -978,19 +1348,44 @@ function updateGlobalStatus() {
   const watchingCount = monitors.filter(m => m.status === 'watching').length;
   const pill = els.globalPill;
   const text = els.globalStatusText;
+  const cluster = QUOTE_CLUSTERS[activeClusterIndex] || QUOTE_CLUSTERS[0];
+  const globalState = getGlobalMarketState();
+  const isClosed = smartThrottleEnabled && monitors.length > 0 && globalState === 'closed';
+  const isMidday = smartThrottleEnabled && monitors.length > 0 && globalState === 'midday';
+  const isDataStale = !isClosed && lastSuccessTimestamp > 0 && (Date.now() - lastSuccessTimestamp > STALE_THRESHOLD_MS);
 
   if (triggeredCount > 0) {
-    pill.className = 'status-pill triggered';
+    pill.className = 'status-pill triggered clickable';
     text.textContent = triggeredCount + ' 只标的已触发警报';
-  } else if (isThrottling) {
-    pill.className = 'status-pill throttled';
-    text.textContent = '休市节流中 (60s)';
+    pill.title = '有标的已达到预警条件，点击可刷新';
+  } else if (consecutiveFailures >= 2) {
+    pill.className = 'status-pill error clickable';
+    text.textContent = '行情中断·重试中(' + consecutiveFailures + ')';
+    pill.title = '当前主备集群均请求失败，点击立即强制重试';
+  } else if (isDataStale) {
+    pill.className = 'status-pill error clickable';
+    text.textContent = '行情已失效·暂停提醒';
+    pill.title = '超过45秒未收到新行情，已冻结预警判定，点击重试';
+  } else if (isClosed) {
+    pill.className = 'status-pill throttled clickable';
+    text.textContent = '已收盘·休眠中';
+    pill.title = '全天交易已结束或周末休市，网络轮询已深度休眠；点击可手动刷新一次最新收盘价';
+  } else if (isMidday) {
+    pill.className = 'status-pill throttled clickable';
+    text.textContent = '午间休市 (60s)';
+    pill.title = '处于午间休市时段，保持60秒低频心跳';
+  } else if (activeClusterIndex !== 0) {
+    pill.className = 'status-pill backup clickable';
+    text.textContent = '备用链路中 (' + cluster.id + ')';
+    pill.title = '主集群异常，当前使用备用集群 ' + cluster.host + '，点击可重试';
   } else if (watchingCount > 0) {
-    pill.className = 'status-pill on';
-    text.textContent = '监控中 ' + watchingCount + ' 只标的';
+    pill.className = 'status-pill on clickable';
+    text.textContent = '监控中 ' + watchingCount + ' 只标的 (' + cluster.id + ')';
+    pill.title = '实时盯盘运行中，行情节点：' + cluster.host + '，点击可立即刷新';
   } else {
-    pill.className = 'status-pill';
+    pill.className = 'status-pill clickable';
     text.textContent = '未启动监控';
+    pill.title = '暂无监控项';
   }
 }
 
@@ -1004,13 +1399,18 @@ function renderTable() {
   }
   els.emptyBox.style.display = 'none';
 
+  const globalState = getGlobalMarketState();
+  const isClosed = smartThrottleEnabled && monitors.length > 0 && globalState === 'closed';
+  const isDataStale = !isClosed && lastSuccessTimestamp > 0 && (Date.now() - lastSuccessTimestamp > STALE_THRESHOLD_MS);
+
   tbody.innerHTML = monitors.map(item => {
     const q = quotes[item.code];
     const isSelected = item.id === selectedId;
     const isTriggered = item.status === 'triggered';
     const rowClass = [
       isSelected ? 'selected' : '',
-      isTriggered ? 'row-triggered' : ''
+      isTriggered ? 'row-triggered' : '',
+      isDataStale ? 'row-stale' : ''
     ].filter(Boolean).join(' ');
 
     const mk = marketNameOf(item.code);
@@ -1025,7 +1425,17 @@ function renderTable() {
     if (q) {
       const colorClass = q.change > 0 ? 'up' : q.change < 0 ? 'down' : 'flat';
       const sign = q.change > 0 ? '+' : '';
-      priceHtml = '<span class="price-cell num ' + colorClass + '">' + fmt(q.price, decimals) + '</span>';
+      const staleTag = isDataStale ? '<span class="stale-tag" title="数据超龄未刷新，预警已冻结">过期</span>' : '';
+
+      // 实时跳价（Tick Flash）微光动效判定
+      let flashClass = '';
+      const prev = prevPrices[item.code];
+      if (prev != null && q.price !== prev) {
+        flashClass = q.price > prev ? 'tick-flash-up' : 'tick-flash-down';
+      }
+      prevPrices[item.code] = q.price;
+
+      priceHtml = '<span class="price-cell num ' + colorClass + ' ' + flashClass + '">' + fmt(q.price, decimals) + '</span>' + staleTag;
       chgHtml = '<span class="num ' + colorClass + '">' + sign + fmt(q.change, decimals) + ' (' + sign + fmt(q.changePct, 2) + '%)</span>';
       amtHtml = '<span class="num" style="font-size:12px; color:var(--text-dim);">' + fmtBig(q.amt) + '</span>';
 
@@ -1476,10 +1886,48 @@ function loadThrottleSettings() {
   } catch (e) {}
 }
 
+function checkMarketAwake() {
+  const mState = smartThrottleEnabled && monitors.length > 0 ? getGlobalMarketState() : 'trading';
+  if (mState !== 'closed') {
+    // 已进入开市集合竞价或午休时段，立即唤醒并恢复轮询
+    restartTimer();
+    pollCycle();
+  } else {
+    updateGlobalStatus();
+  }
+}
+
 function restartTimer() {
   clearInterval(timer);
-  const interval = isThrottling ? 60000 : refreshInterval;
-  timer = setInterval(pollCycle, interval);
+  timer = null;
+  if (preciseWakeTimer) {
+    clearTimeout(preciseWakeTimer);
+    preciseWakeTimer = null;
+  }
+
+  if (!monitors.length) return;
+
+  const mState = smartThrottleEnabled ? getGlobalMarketState() : 'trading';
+  lastAppliedMarketState = mState;
+  isThrottling = mState !== 'trading';
+
+  if (mState === 'trading') {
+    timer = setInterval(pollCycle, refreshInterval);
+  } else if (mState === 'midday') {
+    timer = setInterval(pollCycle, 60000);
+  } else {
+    // closed 状态：全天收盘闭市或周末，深度休眠
+    // 1. 每 60 秒本地巡检时钟（兜底应对系统休眠或时间跳变）
+    timer = setInterval(checkMarketAwake, 60000);
+    // 2. 毫秒级高精度倒计时：在开市前2秒准时预热唤醒，消除开盘延迟
+    const msToWake = getMsUntilNextMarketWakeup();
+    if (msToWake > 0 && msToWake < 86400000 * 4) {
+      preciseWakeTimer = setTimeout(() => {
+        preciseWakeTimer = null;
+        checkMarketAwake();
+      }, msToWake);
+    }
+  }
 }
 
 /* ================= 事件监听绑定 ================= */
@@ -1519,9 +1967,55 @@ els.suggestBox.addEventListener('mousedown', e => {
   }
 });
 
+/* 设置气泡浮层交互控制 */
+function toggleSettingsPopover(force) {
+  if (!els.settingsPopover) return;
+  const isOpen = els.settingsPopover.classList.contains('open');
+  const shouldOpen = typeof force === 'boolean' ? force : !isOpen;
+  if (shouldOpen) {
+    els.settingsPopover.classList.add('open');
+    if (els.settingsToggleBtn) els.settingsToggleBtn.classList.add('active');
+  } else {
+    els.settingsPopover.classList.remove('open');
+    if (els.settingsToggleBtn) els.settingsToggleBtn.classList.remove('active');
+  }
+}
+
+if (els.settingsToggleBtn) {
+  els.settingsToggleBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleSettingsPopover();
+  });
+}
+if (els.settingsCloseBtn) {
+  els.settingsCloseBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleSettingsPopover(false);
+  });
+}
+if (els.settingsPopover) {
+  els.settingsPopover.addEventListener('click', e => {
+    e.stopPropagation();
+  });
+}
+
 document.addEventListener('click', e => {
   if (!e.target.closest('.field')) els.suggestBox.classList.remove('open');
+  if (els.settingsPopover && !e.target.closest('.settings-wrap')) {
+    toggleSettingsPopover(false);
+  }
   ensureAudio();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (els.settingsPopover && els.settingsPopover.classList.contains('open')) {
+      toggleSettingsPopover(false);
+    }
+    if (els.editModal && els.editModal.classList.contains('open')) {
+      closeEditModal();
+    }
+  }
 });
 
 els.intervalSelect.addEventListener('change', () => {
@@ -1591,8 +2085,12 @@ els.importFileInput.addEventListener('change', e => {
 
 /* 后台标签页与标题联动 */
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && !monitors.some(m => m.status === 'triggered')) {
-    stopTitleFlashing();
+  if (!document.hidden) {
+    if (!monitors.some(m => m.status === 'triggered')) {
+      stopTitleFlashing();
+    }
+    // 页面切回前台时，主动触发一次时钟校准，若已开市立刻恢复高频工作
+    checkMarketAwake();
   }
 });
 
@@ -1624,6 +2122,13 @@ els.editLowerInput.addEventListener('keydown', e => {
 window.addEventListener('resize', () => {
   if (chartInstance) chartInstance.resize();
 });
+
+if (els.globalPill) {
+  els.globalPill.addEventListener('click', () => {
+    toast('正在强制重试刷新行情...');
+    pollCycle();
+  });
+}
 
 /* ================= 页面初始化启动 ================= */
 (function init() {
