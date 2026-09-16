@@ -328,6 +328,43 @@
   .modal .form-row { margin-bottom: 12px; }
   .modal .modal-btns { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 
+  /* 数据同步模态框及二维码 */
+  .sync-modal-content { width: 90%; max-width: 400px; }
+  .sync-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .sync-modal-header h3 { margin-bottom: 0; }
+  .sync-tabs { display: flex; gap: 8px; border-bottom: 1px solid var(--line); margin-bottom: 16px; }
+  .sync-tab {
+    background: transparent; border: none; border-bottom: 2px solid transparent;
+    color: var(--text-dim); padding: 8px 12px; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+  }
+  .sync-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .sync-panel { display: none; }
+  .sync-panel.active { display: block; }
+  
+  .qr-box-wrap {
+    display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px;
+  }
+  .qrcode-box {
+    background: #ffffff; padding: 12px; border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    min-width: 184px; min-height: 184px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .qrcode-box canvas, .qrcode-box img { display: block; margin: 0 auto; }
+  .qr-loading { color: #5f7396; font-size: 12px; }
+  .qr-stat { font-size: 13px; font-weight: 600; color: var(--text); }
+  .qr-hint { font-size: 11px; color: var(--text-faint); max-width: 320px; line-height: 1.5; }
+  
+  .sync-textarea {
+    width: 100%; padding: 10px; background: var(--panel-2); color: var(--text);
+    border: 1px solid var(--line); border-radius: 8px; font-size: 12px;
+    font-family: Consolas, monospace; resize: vertical; outline: none; box-sizing: border-box;
+  }
+  .sync-textarea:focus { border-color: rgba(245, 166, 35, 0.55); }
+  .sync-import-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .sync-actions-row { display: flex; gap: 10px; margin-top: 14px; width: 100%; }
+
   /* 吐司提示 */
   .toast {
     position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
@@ -431,15 +468,28 @@
             </div>
           </div>
 
-          <!-- 数据备份与迁移 -->
+          <!-- 跨端极速同步 -->
           <div class="popover-section popover-footer">
-            <div class="popover-section-label">配置与数据迁移</div>
+            <div class="popover-section-label">跨端极速同步</div>
+            <div class="popover-btns">
+              <button id="qrSyncBtn" class="btn btn-warn btn-sm" title="生成手机扫码即开的同步二维码">
+                <span>📱</span> 扫码同步
+              </button>
+              <button id="tokenSyncBtn" class="btn btn-ghost btn-sm" title="复制或粘贴文本口令进行同步">
+                <span>📋</span> 口令同步
+              </button>
+            </div>
+          </div>
+
+          <!-- 本地文件备份（完整保留） -->
+          <div class="popover-section popover-footer" style="padding-top: 8px; margin-top: -6px; border-top: 1px dashed var(--line);">
+            <div class="popover-section-label">本地文件备份</div>
             <div class="popover-btns">
               <button id="exportBtn" class="btn btn-ghost btn-sm" title="导出全部监控项与设置为 JSON 备份文件">
-                <span>📥</span> 导出备份
+                <span>📥</span> 导出 JSON
               </button>
               <button id="importBtn" class="btn btn-ghost btn-sm" title="从 JSON 备份文件恢复监控项">
-                <span>📤</span> 导入恢复
+                <span>📤</span> 导入 JSON
               </button>
               <input type="file" id="importFileInput" accept=".json" style="display: none;">
             </div>
@@ -547,6 +597,56 @@
   </div>
 </div>
 
+<!-- 跨端数据同步模态框（扫码直通 + 文本口令） -->
+<div class="modal-mask" id="syncModal">
+  <div class="modal sync-modal-content">
+    <div class="sync-modal-header">
+      <h3 id="syncModalTitle">跨端数据同步</h3>
+      <button id="syncModalCloseBtn" class="popover-close" aria-label="关闭同步窗口" title="关闭">✕</button>
+    </div>
+
+    <!-- 选项卡切换 -->
+    <div class="sync-tabs">
+      <button class="sync-tab active" id="tabQrBtn" type="button">📱 扫码同步</button>
+      <button class="sync-tab" id="tabTokenBtn" type="button">📋 文本口令</button>
+    </div>
+
+    <!-- 扫码视图 -->
+    <div class="sync-panel active" id="panelQr">
+      <div class="qr-box-wrap">
+        <div id="qrcodeBox" class="qrcode-box">
+          <div class="qr-loading">正在生成同步二维码...</div>
+        </div>
+        <div class="qr-info">
+          <div class="qr-stat" id="qrStatText">包含 0 只监控标的</div>
+          <p class="qr-hint" id="qrEnvHint">手机使用微信或系统相机扫码，直接在手机浏览器打开并同步。</p>
+        </div>
+      </div>
+      <div class="sync-actions-row">
+        <button id="quickCopyTokenInQrBtn" class="btn btn-ghost btn-sm" style="flex:1;">
+          <span>📋</span> 复制口令
+        </button>
+      </div>
+    </div>
+
+    <!-- 文本口令视图 -->
+    <div class="sync-panel" id="panelToken">
+      <div class="field form-row">
+        <label for="syncTokenInput">同步口令（以 ding:// 开头或粘贴配置代码）</label>
+        <textarea id="syncTokenInput" class="sync-textarea" rows="4" placeholder="在此粘贴来自电脑或他人的同步口令 ding://..."></textarea>
+      </div>
+      <div class="sync-import-btns">
+        <button id="parseTokenMergeBtn" class="btn btn-warn btn-sm" title="保留当前原有标的，仅合并追加新标的">
+          <span>➕</span> 合并追加
+        </button>
+        <button id="parseTokenOverwriteBtn" class="btn btn-primary btn-sm" title="清空当前已有标的，完全替换为口令中的配置">
+          <span>🔄</span> 覆盖替换
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -632,7 +732,22 @@ const els = {
   editUpperInput: document.getElementById('editUpperInput'),
   editLowerInput: document.getElementById('editLowerInput'),
   modalCancelBtn: document.getElementById('modalCancelBtn'),
-  modalSaveBtn: document.getElementById('modalSaveBtn')
+  modalSaveBtn: document.getElementById('modalSaveBtn'),
+  qrSyncBtn: document.getElementById('qrSyncBtn'),
+  tokenSyncBtn: document.getElementById('tokenSyncBtn'),
+  syncModal: document.getElementById('syncModal'),
+  syncModalCloseBtn: document.getElementById('syncModalCloseBtn'),
+  tabQrBtn: document.getElementById('tabQrBtn'),
+  tabTokenBtn: document.getElementById('tabTokenBtn'),
+  panelQr: document.getElementById('panelQr'),
+  panelToken: document.getElementById('panelToken'),
+  qrcodeBox: document.getElementById('qrcodeBox'),
+  qrStatText: document.getElementById('qrStatText'),
+  qrEnvHint: document.getElementById('qrEnvHint'),
+  quickCopyTokenInQrBtn: document.getElementById('quickCopyTokenInQrBtn'),
+  syncTokenInput: document.getElementById('syncTokenInput'),
+  parseTokenMergeBtn: document.getElementById('parseTokenMergeBtn'),
+  parseTokenOverwriteBtn: document.getElementById('parseTokenOverwriteBtn')
 };
 
 /* ================= 代码规范化（仅支持 A 股 / 港股） ================= */
@@ -1786,6 +1901,292 @@ function importConfig(file) {
   reader.readAsText(file);
 }
 
+/* ================= 跨端数据同步（扫码直通 + 文本口令） ================= */
+let qrCodeLibPromise = null;
+
+function loadQrCodeLib() {
+  if (window.QRCode) return Promise.resolve(window.QRCode);
+  if (qrCodeLibPromise) return qrCodeLibPromise;
+  qrCodeLibPromise = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js';
+    s.onload = () => window.QRCode ? resolve(window.QRCode) : reject(new Error('qrcode load fail'));
+    s.onerror = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      s2.onload = () => window.QRCode ? resolve(window.QRCode) : reject(new Error('qrcode fallback fail'));
+      s2.onerror = () => reject(new Error('qrcode load error'));
+      document.head.appendChild(s2);
+    };
+    document.head.appendChild(s);
+  });
+  return qrCodeLibPromise;
+}
+
+function buildSyncPayload() {
+  const cleanMonitors = monitors.map(m => ({
+    c: m.code,
+    n: m.name,
+    m: m.market,
+    u: m.upperTarget,
+    l: m.lowerTarget
+  }));
+  return {
+    v: 1,
+    t: Date.now(),
+    settings: {
+      interval: refreshInterval,
+      soundType: currentSoundType,
+      volume: currentVolume,
+      throttle: smartThrottleEnabled
+    },
+    monitors: cleanMonitors
+  };
+}
+
+function encodeSyncToken(payload) {
+  const jsonStr = JSON.stringify(payload);
+  const b64 = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) =>
+    String.fromCharCode('0x' + p1)
+  ));
+  return 'ding://v1#' + b64;
+}
+
+function decodeSyncToken(token) {
+  if (!token || typeof token !== 'string') throw new Error('口令不能为空');
+  let clean = token.trim();
+  if (clean.startsWith('ding://v1#')) {
+    clean = clean.slice('ding://v1#'.length);
+  } else if (clean.startsWith('ding://')) {
+    clean = clean.replace(/^ding:\/\/[^#]*#?/, '');
+  }
+  if (clean.startsWith('{') && clean.endsWith('}')) {
+    return JSON.parse(clean);
+  }
+  const jsonStr = decodeURIComponent(atob(clean).split('').map(c =>
+    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+  ).join(''));
+  return JSON.parse(jsonStr);
+}
+
+function applySyncPayload(payload, mode = 'merge') {
+  if (!payload || !Array.isArray(payload.monitors)) {
+    throw new Error('无效的同步数据格式');
+  }
+  const incoming = payload.monitors.map(normalizeMonitorItem).filter(Boolean);
+  if (!incoming.length) {
+    throw new Error('口令中未包含有效监控标的');
+  }
+
+  let addCount = 0;
+  let updateCount = 0;
+
+  if (mode === 'overwrite') {
+    monitors = incoming;
+    addCount = incoming.length;
+  } else {
+    // merge 模式：相同代码更新目标价，新代码追加
+    incoming.forEach(newItem => {
+      const existing = monitors.find(m => m.code === newItem.code);
+      if (existing) {
+        existing.upperTarget = newItem.upperTarget;
+        existing.lowerTarget = newItem.lowerTarget;
+        existing.status = 'watching';
+        updateCount++;
+      } else {
+        monitors.push(newItem);
+        addCount++;
+      }
+    });
+  }
+
+  // 同步全局偏好设置
+  if (payload.settings) {
+    const s = payload.settings;
+    if (s.interval && !isNaN(+s.interval)) {
+      refreshInterval = +s.interval;
+      saveInterval(refreshInterval);
+      if (els.intervalSelect) els.intervalSelect.value = String(refreshInterval);
+    }
+    if (s.soundType) {
+      currentSoundType = s.soundType;
+      saveSoundSettings();
+      if (els.soundSelect) els.soundSelect.value = currentSoundType;
+    }
+    if (s.volume != null && !isNaN(+s.volume)) {
+      currentVolume = parseInt(s.volume, 10);
+      saveSoundSettings();
+      if (els.volumeRange) els.volumeRange.value = String(currentVolume);
+      if (els.volumeVal) els.volumeVal.textContent = currentVolume + '%';
+    }
+    if (s.throttle != null) {
+      smartThrottleEnabled = !!s.throttle;
+      saveThrottleSettings();
+      if (els.throttleToggle) els.throttleToggle.checked = smartThrottleEnabled;
+    }
+  }
+
+  saveMonitors();
+  if (monitors.length > 0 && (!selectedId || !monitors.some(m => m.id === selectedId))) {
+    selectedId = monitors[0].id;
+    isChartCollapsed = false;
+  }
+  updateGlobalStatus();
+  renderTable();
+  restartTimer();
+  pollCycle();
+
+  const tipText = mode === 'overwrite'
+    ? '已完全覆盖自选配置，当前共监控 ' + monitors.length + ' 只标的'
+    : '已同步：新增 ' + addCount + ' 只，更新 ' + updateCount + ' 只标的';
+  toast(tipText);
+}
+
+async function renderQrCode() {
+  if (!els.qrcodeBox) return;
+  const payload = buildSyncPayload();
+  const token = encodeSyncToken(payload);
+  
+  if (els.qrStatText) {
+    els.qrStatText.textContent = '包含 ' + payload.monitors.length + ' 只监控标的与报警目标';
+  }
+  
+  els.qrcodeBox.innerHTML = '<div class="qr-loading">正在生成二维码...</div>';
+
+  let syncUrl = '';
+  if (location.protocol === 'http:' || location.protocol === 'https:') {
+    const url = new URL(location.href);
+    url.hash = 'sync=' + encodeURIComponent(token);
+    syncUrl = url.toString();
+    if (els.qrEnvHint) {
+      els.qrEnvHint.textContent = '手机使用微信或系统相机扫码，直接在手机浏览器打开并同步。';
+    }
+  } else {
+    syncUrl = token;
+    if (els.qrEnvHint) {
+      els.qrEnvHint.textContent = '当前处于本地文件(file://)协议，手机无法直接跨设备读取硬盘。手机扫码可直接获得口令文本，亦可点击下方直接复制口令。';
+    }
+  }
+
+  try {
+    const QRCode = await loadQrCodeLib();
+    els.qrcodeBox.innerHTML = '';
+    new QRCode(els.qrcodeBox, {
+      text: syncUrl,
+      width: 180,
+      height: 180,
+      colorDark: '#0b1220',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch (err) {
+    els.qrcodeBox.innerHTML = '<div style="color:var(--danger); font-size:12px; padding:12px;">二维码库加载失败，请直接使用下方“复制口令”</div>';
+  }
+}
+
+function openSyncModal(tab = 'qr') {
+  if (!els.syncModal) return;
+  switchSyncTab(tab);
+  els.syncModal.classList.add('open');
+  if (tab === 'qr') {
+    renderQrCode();
+  } else {
+    if (els.syncTokenInput) {
+      els.syncTokenInput.value = '';
+      setTimeout(() => els.syncTokenInput.focus(), 100);
+    }
+  }
+}
+
+function closeSyncModal() {
+  if (els.syncModal) els.syncModal.classList.remove('open');
+}
+
+function switchSyncTab(tabName) {
+  if (tabName === 'qr') {
+    if (els.tabQrBtn) els.tabQrBtn.classList.add('active');
+    if (els.tabTokenBtn) els.tabTokenBtn.classList.remove('active');
+    if (els.panelQr) els.panelQr.classList.add('active');
+    if (els.panelToken) els.panelToken.classList.remove('active');
+    renderQrCode();
+  } else {
+    if (els.tabTokenBtn) els.tabTokenBtn.classList.add('active');
+    if (els.tabQrBtn) els.tabQrBtn.classList.remove('active');
+    if (els.panelToken) els.panelToken.classList.add('active');
+    if (els.panelQr) els.panelQr.classList.remove('active');
+    if (els.syncTokenInput) els.syncTokenInput.focus();
+  }
+}
+
+function copySyncToken() {
+  const payload = buildSyncPayload();
+  if (!payload.monitors.length) {
+    toast('当前无任何监控标的');
+    return;
+  }
+  const token = encodeSyncToken(payload);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(token).then(() => {
+      toast('同步口令已复制到剪贴板，可发送到手机');
+    }).catch(() => fallbackCopy(token));
+  } else {
+    fallbackCopy(token);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    toast('同步口令已复制到剪贴板，可发送到手机');
+  } catch (e) {
+    toast('复制失败，请手动选择口令复制');
+  }
+  document.body.removeChild(ta);
+}
+
+function handleImportToken(mode) {
+  const raw = (els.syncTokenInput ? els.syncTokenInput.value : '').trim();
+  if (!raw) {
+    toast('请输入或粘贴同步口令');
+    return;
+  }
+  try {
+    const payload = decodeSyncToken(raw);
+    applySyncPayload(payload, mode);
+    closeSyncModal();
+  } catch (e) {
+    toast('口令解析失败：' + (e.message || '格式错误'));
+  }
+}
+
+function checkUrlHashSync() {
+  const hash = location.hash;
+  if (!hash || !hash.includes('sync=')) return;
+  const match = hash.match(/sync=([^&]+)/);
+  if (!match) return;
+  try {
+    const rawToken = decodeURIComponent(match[1]);
+    const payload = decodeSyncToken(rawToken);
+    if (payload && Array.isArray(payload.monitors) && payload.monitors.length > 0) {
+      setTimeout(() => {
+        const confirmMsg = '检测到来自扫码同步的自选配置（含 ' + payload.monitors.length + ' 只标的），是否立即载入？';
+        if (confirm(confirmMsg)) {
+          applySyncPayload(payload, 'merge');
+        }
+        history.replaceState(null, '', location.pathname + location.search);
+      }, 300);
+    }
+  } catch (e) {
+    console.warn('URL Hash 同步解析出错', e);
+  }
+}
+
 /* ================= 搜索建议联想 ================= */
 function renderSuggest(query) {
   const q = query.trim().toLowerCase();
@@ -2015,6 +2416,9 @@ document.addEventListener('keydown', e => {
     if (els.editModal && els.editModal.classList.contains('open')) {
       closeEditModal();
     }
+    if (els.syncModal && els.syncModal.classList.contains('open')) {
+      closeSyncModal();
+    }
   }
 });
 
@@ -2130,6 +2534,43 @@ if (els.globalPill) {
   });
 }
 
+/* 跨端数据同步相关事件绑定 */
+if (els.qrSyncBtn) {
+  els.qrSyncBtn.addEventListener('click', () => {
+    toggleSettingsPopover(false);
+    openSyncModal('qr');
+  });
+}
+if (els.tokenSyncBtn) {
+  els.tokenSyncBtn.addEventListener('click', () => {
+    toggleSettingsPopover(false);
+    openSyncModal('token');
+  });
+}
+if (els.syncModalCloseBtn) {
+  els.syncModalCloseBtn.addEventListener('click', closeSyncModal);
+}
+if (els.syncModal) {
+  els.syncModal.addEventListener('click', e => {
+    if (e.target === els.syncModal) closeSyncModal();
+  });
+}
+if (els.tabQrBtn) {
+  els.tabQrBtn.addEventListener('click', () => switchSyncTab('qr'));
+}
+if (els.tabTokenBtn) {
+  els.tabTokenBtn.addEventListener('click', () => switchSyncTab('token'));
+}
+if (els.quickCopyTokenInQrBtn) {
+  els.quickCopyTokenInQrBtn.addEventListener('click', copySyncToken);
+}
+if (els.parseTokenMergeBtn) {
+  els.parseTokenMergeBtn.addEventListener('click', () => handleImportToken('merge'));
+}
+if (els.parseTokenOverwriteBtn) {
+  els.parseTokenOverwriteBtn.addEventListener('click', () => handleImportToken('overwrite'));
+}
+
 /* ================= 页面初始化启动 ================= */
 (function init() {
   loadInterval();
@@ -2153,6 +2594,7 @@ if (els.globalPill) {
   chartRefreshTimer = setInterval(() => {
     if (!isChartCollapsed && selectedId) renderSelectedChart();
   }, 60000);
+  checkUrlHashSync();
 })();
 </script>
 </body>
