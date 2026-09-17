@@ -2070,17 +2070,33 @@
   <section class="card">
     <div class="add-bar">
       <div class="field">
-        <label for="codeInput">股票代码 / 名称</label>
+        <label for="codeInput">股票代码 / 名称 <span id="codePreviewBadge" class="code-preview-badge" style="display: none;"></span></label>
         <input id="codeInput" type="text" autocomplete="off" spellcheck="false"
                placeholder="输入代码或拼音，如 600519 / 00700 / 茅台">
         <div id="suggestBox" class="suggest"></div>
       </div>
       <div class="field">
-        <label for="upperInput">上限目标（≥ 突破/止盈）</label>
+        <div class="field-head-row">
+          <label for="upperInput">上限目标（≥ 突破/止盈）</label>
+          <div id="upperQuickTags" class="quick-target-tags" style="display: none;">
+            <button type="button" class="target-tag-btn" data-pct="2">+2%</button>
+            <button type="button" class="target-tag-btn" data-pct="3">+3%</button>
+            <button type="button" class="target-tag-btn" data-pct="5">+5%</button>
+            <button type="button" class="target-tag-btn" data-pct="8">+8%</button>
+          </div>
+        </div>
         <input id="upperInput" type="number" min="0" step="0.01" placeholder="选填，如 1300 或 450">
       </div>
       <div class="field">
-        <label for="lowerInput">下限目标（≤ 跌破/止损）</label>
+        <div class="field-head-row">
+          <label for="lowerInput">下限目标（≤ 跌破/止损）</label>
+          <div id="lowerQuickTags" class="quick-target-tags" style="display: none;">
+            <button type="button" class="target-tag-btn down" data-pct="-2">-2%</button>
+            <button type="button" class="target-tag-btn down" data-pct="-3">-3%</button>
+            <button type="button" class="target-tag-btn down" data-pct="-5">-5%</button>
+            <button type="button" class="target-tag-btn down" data-pct="-8">-8%</button>
+          </div>
+        </div>
         <input id="lowerInput" type="number" min="0" step="0.01" placeholder="选填，如 1200 或 410">
       </div>
       <button id="addBtn" class="btn btn-primary">
@@ -2494,11 +2510,27 @@
   <div class="modal">
     <h3 id="modalTitle">调整监控目标</h3>
     <div class="form-row field">
-      <label for="editUpperInput">上限目标（≥ 突破/止盈，留空则不监控上限）</label>
+      <div class="field-head-row">
+        <label for="editUpperInput">上限目标（≥ 突破/止盈，留空则不监控上限）</label>
+        <div id="editUpperQuickTags" class="quick-target-tags" style="display: none;">
+          <button type="button" class="target-tag-btn" data-pct="2">+2%</button>
+          <button type="button" class="target-tag-btn" data-pct="3">+3%</button>
+          <button type="button" class="target-tag-btn" data-pct="5">+5%</button>
+          <button type="button" class="target-tag-btn" data-pct="8">+8%</button>
+        </div>
+      </div>
       <input id="editUpperInput" type="number" min="0" step="0.01" placeholder="留空则不监控上限">
     </div>
     <div class="form-row field">
-      <label for="editLowerInput">下限目标（≤ 跌破/止损，留空则不监控下限）</label>
+      <div class="field-head-row">
+        <label for="editLowerInput">下限目标（≤ 跌破/止损，留空则不监控下限）</label>
+        <div id="editLowerQuickTags" class="quick-target-tags" style="display: none;">
+          <button type="button" class="target-tag-btn down" data-pct="-2">-2%</button>
+          <button type="button" class="target-tag-btn down" data-pct="-3">-3%</button>
+          <button type="button" class="target-tag-btn down" data-pct="-5">-5%</button>
+          <button type="button" class="target-tag-btn down" data-pct="-8">-8%</button>
+        </div>
+      </div>
       <input id="editLowerInput" type="number" min="0" step="0.01" placeholder="留空则不监控下限">
     </div>
     <div class="modal-btns">
