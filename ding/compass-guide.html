@@ -30,6 +30,9 @@
     --blue: #3890ff;
     --blue-bg: rgba(56, 144, 255, 0.1);
     --blue-border: rgba(56, 144, 255, 0.28);
+    --purple: #a855f7;
+    --purple-bg: rgba(168, 85, 247, 0.1);
+    --purple-border: rgba(168, 85, 247, 0.28);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,7 +51,7 @@
   }
 
   .container {
-    max-width: 960px;
+    max-width: 980px;
     margin: 0 auto;
   }
 
@@ -129,22 +132,24 @@
   .hero-desc {
     font-size: 14px;
     color: var(--text-dim);
-    max-width: 660px;
+    max-width: 720px;
     margin: 0 auto;
     line-height: 1.7;
   }
 
-  /* 核心章节 */
+  /* 核心章节通用样式 */
   section {
     margin-bottom: 48px;
   }
   .section-head {
     display: flex;
     align-items: baseline;
+    justify-content: space-between;
     gap: 12px;
     margin-bottom: 20px;
     padding-bottom: 10px;
     border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
   }
   .section-title {
     display: flex;
@@ -163,14 +168,24 @@
     color: var(--text-faint);
   }
 
-  /* 微观撮合对决标尺 */
-  .orderflow-panel {
+  /* 通用信息面板 */
+  .info-panel {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 20px;
   }
+  .info-text {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .info-text strong {
+    color: var(--text);
+  }
+
+  /* 微观撮合对决标尺 */
   .orderflow-gauge {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
@@ -229,19 +244,160 @@
     white-space: nowrap;
   }
 
-  .orderflow-text {
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.7;
+  /* 异动雷达视口模拟卡片 */
+  .ticker-demo-wrap {
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
   }
-  .orderflow-text strong {
+  .ticker-demo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .ticker-demo-bar {
+    height: 38px;
+    background: #0f1828;
+    border: 1px solid rgba(148, 173, 214, 0.16);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 12px;
+    overflow: hidden;
+  }
+  .ticker-demo-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--warn);
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .ticker-demo-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .ticker-demo-name {
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .ticker-demo-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .ticker-demo-tag.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+  .ticker-demo-tag.bear { background: var(--bear-bg); color: var(--bear); border: 1px solid var(--bear-border); }
+  .ticker-demo-tag.bull { background: var(--bull-bg); color: var(--bull); border: 1px solid var(--bull-border); }
+  .ticker-demo-text {
     color: var(--text);
   }
+  .ticker-demo-action {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--accent);
+    margin-left: auto;
+  }
+  .ticker-demo-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border);
+    padding-left: 10px;
+  }
+  .ticker-demo-btn {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    font-size: 11px;
+    line-height: 1;
+  }
+  .ticker-demo-page {
+    font-size: 11px;
+    color: var(--text-faint);
+  }
 
-  /* 4维体检网格 */
-  .grid-2 {
+  /* 8大量化异动矩阵表格 */
+  .table-responsive {
+    overflow-x: auto;
+    margin-top: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  table.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    text-align: left;
+    background: var(--card);
+  }
+  table.matrix-table th {
+    background: var(--card-soft);
+    color: var(--text);
+    padding: 11px 14px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.matrix-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(148, 173, 214, 0.08);
+    color: var(--text-dim);
+    vertical-align: middle;
+  }
+  table.matrix-table tr:last-child td {
+    border-bottom: none;
+  }
+  table.matrix-table tr:hover td {
+    background: rgba(148, 173, 214, 0.04);
+  }
+  .rule-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .rule-pill.warn { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-border); }
+  .rule-pill.bear { background: var(--bear-bg); color: var(--bear); border: 1px solid var(--bear-border); }
+  .rule-pill.bull { background: var(--bull-bg); color: var(--bull); border: 1px solid var(--bull-border); }
+
+  /* 5维体检网格 */
+  .grid-5 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
   }
   .meter-card {
@@ -256,7 +412,7 @@
     transition: border-color .15s;
   }
   .meter-card:hover {
-    border-color: rgba(148, 173, 214, 0.24);
+    border-color: rgba(148, 173, 214, 0.28);
   }
   .meter-head {
     display: flex;
@@ -271,6 +427,20 @@
     display: flex;
     align-items: center;
     gap: 8px;
+  }
+  .meter-code-badge {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 800;
+    font-family: Consolas, monospace;
   }
   .meter-tag {
     font-size: 11px;
@@ -310,6 +480,144 @@
     color: var(--text);
   }
 
+  /* 表格极简十字光标与浮层说明卡 */
+  .radar-popover-demo {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
+    align-items: center;
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .radar-cursor-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    background: #0d1525;
+    border: 1px solid rgba(148, 173, 214, 0.16);
+    border-radius: 8px;
+  }
+  .radar-cursor-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    background: rgba(245, 166, 35, 0.12);
+    border: 1px solid rgba(245, 166, 35, 0.35);
+    color: var(--accent);
+  }
+  .radar-cursor-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .radar-cursor-desc {
+    font-size: 11px;
+    color: var(--text-faint);
+    text-align: center;
+    line-height: 1.4;
+  }
+
+  /* 攻防标尺模型展示 */
+  .keylevels-card {
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+  .keylevels-scale {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    padding: 24px 0 10px;
+  }
+  .keylevels-scale::before {
+    content: "";
+    position: absolute;
+    top: 36px;
+    left: 40px;
+    right: 40px;
+    height: 3px;
+    background: linear-gradient(to right, var(--bull) 0%, var(--accent) 50%, var(--bear) 100%);
+    border-radius: 2px;
+    z-index: 1;
+  }
+  .keylevel-node {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 8px;
+    min-width: 110px;
+    text-align: center;
+  }
+  .keylevel-node.support { border-color: var(--bull-border); }
+  .keylevel-node.vwap { border-color: rgba(245, 166, 35, 0.35); }
+  .keylevel-node.resist { border-color: var(--bear-border); }
+  .keylevel-tag {
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .keylevel-node.support .keylevel-tag { color: var(--bull); }
+  .keylevel-node.vwap .keylevel-tag { color: var(--accent); }
+  .keylevel-node.resist .keylevel-tag { color: var(--bear); }
+  .keylevel-val {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .keylevel-sub {
+    font-size: 10px;
+    color: var(--text-faint);
+  }
+
+  /* 双视角策略展示 */
+  .tactics-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .tactic-card {
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tactic-card.holder { border-left: 3px solid var(--bull); }
+  .tactic-card.watcher { border-left: 3px solid var(--blue); }
+  .tactic-role {
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tactic-card.holder .tactic-role { color: var(--bull); }
+  .tactic-card.watcher .tactic-role { color: var(--blue); }
+  .tactic-text {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
   /* 实战决策卡片列 */
   .decision-grid {
     display: grid;
@@ -341,7 +649,7 @@
     justify-content: space-between;
   }
   .decision-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     color: #ffffff;
     display: flex;
@@ -370,9 +678,8 @@
     color: var(--text-dim);
     font-weight: 600;
   }
-
   .decision-desc {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-dim);
     line-height: 1.6;
   }
@@ -388,6 +695,45 @@
   .decision-action strong {
     color: var(--accent);
     font-weight: 600;
+  }
+
+  /* 表格七列高密架构拆解卡 */
+  .table-schema-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+  .schema-col-card {
+    background: var(--card-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .schema-col-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .schema-col-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .schema-col-num {
+    font-size: 10px;
+    color: var(--text-faint);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .schema-col-desc {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
   }
 
   /* 逐笔大单雷达展示 */
@@ -451,7 +797,7 @@
     color: var(--text);
   }
 
-  /* 3步速记表 */
+  /* 3步实战操盘流 */
   .steps-list {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -483,7 +829,7 @@
     color: #ffffff;
   }
   .step-desc {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-dim);
     line-height: 1.6;
   }
@@ -507,6 +853,8 @@
     .gauge-side.bear { text-align: left; }
     .gauge-side.bear .gauge-label { justify-content: flex-start; }
     .gauge-center { border-left: none; border-right: none; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 10px 0; }
+    .radar-popover-demo { grid-template-columns: 1fr; }
+    .tactics-box { grid-template-columns: 1fr; }
     .steps-list { grid-template-columns: 1fr; }
     .tick-radar-box { grid-template-columns: 1fr; }
   }
@@ -535,7 +883,7 @@
     </div>
     <h1>量化博弈罗盘 · 实战指引手册</h1>
     <p class="hero-desc">
-      剥离日内价格波动杂音与盘口虚假挂单，基于日内持仓加权成本（VWAP）、盘口委托承接与逐笔大额订单流，直观呈现多空博弈强弱中枢。
+      剥离日内价格波动杂音与盘口虚假挂单，依托日内持仓加权成本（VWAP）、五维微观量化诊断、顶部多标的异动轮询雷达与逐笔大单流，直观展现多空博弈强弱中枢。
     </p>
   </header>
 
@@ -544,17 +892,17 @@
     <div class="section-head">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        盘口微观撮合：多空博弈底层机理
+        第一章：盘口微观撮合与加权成本原理
       </div>
-      <div class="section-subtitle">微观订单流动态平衡</div>
+      <div class="section-subtitle">微观订单流与持仓成本中枢</div>
     </div>
 
-    <div class="orderflow-panel">
+    <div class="info-panel">
       <div class="orderflow-gauge">
         <div class="gauge-side bull">
           <div class="gauge-label">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-            多头主动推升 (买方资金)
+            多头主动推升 (外盘买方资金)
           </div>
           <div class="gauge-desc">以卖一及以上价格主动抢买吃单，消耗上方卖盘阻力，推动价格上行。</div>
         </div>
@@ -567,121 +915,314 @@
         <div class="gauge-side bear">
           <div class="gauge-label">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            空头主动砸盘 (卖方抛压)
+            空头主动砸盘 (内盘卖方抛压)
           </div>
           <div class="gauge-desc">以买一及以下价格主动砸盘甩卖，击穿下方买盘托垫，导致价格滑落。</div>
         </div>
       </div>
 
-      <p class="orderflow-text">
-        分时盘面的即时跳动容易受到偶发小单扰动。量化博弈罗盘通过四维定量建模，持续监测<strong>成交量动能强度、VWAP持仓成本生命线、五档买卖委托深度与逐笔大单真金流向</strong>，帮助交易者在关键攻防位置做出理性决策。
+      <p class="info-text">
+        分时价格的即时跳动易受微小散单干扰。量化博弈罗盘通过<strong>量能动能（V）、均价偏离（P）、五档深度（D）、成交流向（T）与趋势均线（M）</strong>五维定量建模，紧盯全天成交量加权均价（VWAP）分水岭，帮助交易者在关键临界点位保持理性客观。
       </p>
     </div>
   </section>
 
-  <!-- 第二章：左栏 · 多空全盘体检 -->
+  <!-- 第二章：顶部全局异动雷达 (轮询机制与8大量化规则) -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h5l3 7 4-14 3 7h5"/></svg>
+        第二章：顶部全局异动雷达（Ticker 轮询与 8 大规则矩阵）
+      </div>
+      <div class="section-subtitle">多标的高并发突发预警调度</div>
+    </div>
+
+    <div class="info-panel">
+      <!-- 视口模拟卡 -->
+      <div class="ticker-demo-wrap">
+        <div class="ticker-demo-header">
+          <span>顶栏轮询视口运行示意（固定 36px 视口，拒绝页面纵向跳动与横向溢出）：</span>
+          <span style="color:var(--accent);">4.5 秒平滑淡入切换 · 悬停自动阻尼暂停</span>
+        </div>
+        <div class="ticker-demo-bar">
+          <span class="ticker-demo-pill">2 条异动</span>
+          <div class="ticker-demo-content">
+            <span class="ticker-demo-name">贵州茅台</span>
+            <span class="ticker-demo-tag warn">临界逼近</span>
+            <span class="ticker-demo-text">现价 1528.00 逼近上限 ≥ 1530.00，仅距 2.00 (0.1%)</span>
+            <span class="ticker-demo-action">紧盯突破</span>
+          </div>
+          <div class="ticker-demo-ctrl">
+            <span class="ticker-demo-btn">‹</span>
+            <span class="ticker-demo-page num">1/2</span>
+            <span class="ticker-demo-btn">›</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="info-text">
+        <strong>机制设计规范：</strong>原系统将常态震荡（如弱势承压）强行作为异动输出，造成多股监控时同质化废话刷屏。重构后的异动雷达<strong>彻底剥离常态震荡噪音</strong>，仅在真正触发价格突破、极限乖离、盘口大单对决或量比突变时激活。
+      </p>
+
+      <!-- 8大一线量化实战规则矩阵表格 -->
+      <div class="table-responsive">
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th>规则名称</th>
+              <th>量化触发门槛</th>
+              <th>交易专家研判意图</th>
+              <th>预警提示内容与执行动作</th>
+              <th style="text-align:center;">优先级</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="rule-pill warn">到价突破</span></td>
+              <td><code>现价 ≥ 设定上限</code> 且 处于监控中</td>
+              <td>突破预设目标价或关键阻力位，触发止盈或跟踪策略</td>
+              <td><code>现价突破上限，达预定止盈目标 [及时兑现]</code></td>
+              <td style="text-align:center;" class="num">100</td>
+            </tr>
+            <tr>
+              <td><span class="rule-pill bear">到价破位</span></td>
+              <td><code>现价 ≤ 设定下限</code> 且 处于监控中</td>
+              <td>跌穿预设止损价或生命线，触碰绝对风控红线</td>
+              <td><code>现价跌破下限，防线失守触发止损 [果断止损]</code></td>
+              <td style="text-align:center;" class="num">100</td>
+            </tr>
+            <tr>
+              <td><span class="rule-pill warn">临界逼近</span></td>
+              <td>距目标位价差 <code>≤ 0.8%</code> 且 未触发</td>
+              <td>价格即将到达关键攻防节点，提前进入即时盯盘状态</td>
+              <td><code>现价逼近上限/下限，仅距 [X]% [紧盯突破/严防破位]</code></td>
+              <td style="text-align:center;" class="num">90</td>
+            </tr>
+            <tr>
+              <td><span class="rule-pill warn">脉冲脱轨</span></td>
+              <td>正乖离 <code>≥ +2.8%</code> 且 涨幅 <code>≥ 1.5%</code></td>
+              <td>短线脉冲急速拉升，过度脱离 VWAP 持仓成本线，极度超买</td>
+              <td><code>现价脱离分时均价 +[X]%，短线严重超买 [谨防急落]</code></td>
+              <td style="text-align:center;" class="num">85</td>
+            </tr>
+            <tr>
+              <td><span class="rule-pill bear">虚托诱多</span></td>
+              <td>买盘挂单厚重但内盘主卖 <code>≥ 58%</code> 且 <code>现价 &lt; VWAP</code></td>
+              <td>买盘大单堆积营造护盘假象，实际主卖资金持续砸盘出逃</td>
+              <td><code>买单虚托制造假支撑，主卖占比达 [X]% [防守撤离]</code></td>
+              <td style="text-align:center;" class="num">82</td>
+            </tr>
+            <tr>
+              <td><span class="rule-pill bear">放量跳水</span></td>
+              <td>负乖离 <code>≤ -1.8%</code> 且 内盘主卖 <code>≥ 60%</code></td>
+              <td>放量击穿日内持仓成本线，空方主动甩卖加速离场</td>
+              <td><code>放量跌穿分时均价线，内盘砸盘持续 [严控仓位]</code></td>
+              <td style="text-align:center;" class="num">80</td>
+            </tr>
+            <tr>
+              <td><span class="rule-pill bull">爆量主攻</span></td>
+              <td>量比 <code>≥ 2.2</code> 且 外盘主买 <code>≥ 60%</code> 且 <code>现价 ≥ VWAP</code></td>
+              <td>成交量急剧放大，大资金主动扫盘抢筹，多方点火进攻</td>
+              <td><code>实时量比 [X] 倍爆量突增，外盘主买扫盘 [顺势跟进]</code></td>
+              <td style="text-align:center;" class="num">75</td>
+            </tr>
+            <tr>
+              <td><span class="rule-pill warn">极致地量</span></td>
+              <td>量比 <code>≤ 0.35</code> 且 日内振幅 <code>≤ 1.2%</code></td>
+              <td>流动性极度收敛，交投沉寂，多空力量平衡即将打破</td>
+              <td><code>量比仅 [X] 倍极度萎缩，换手停滞 [等待突破]</code></td>
+              <td style="text-align:center;" class="num">60</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第三章：左栏 · 五维量化微雷达系统 -->
   <section>
     <div class="section-head">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="2"/></svg>
-        左栏：多空全盘体检（4维盘口量化诊断）
+        第三章：左栏 · 五维量化微雷达系统（5D Quant Radar）
       </div>
-      <div class="section-subtitle">微观结构综合打分</div>
+      <div class="section-subtitle">多周期微观结构量化体检</div>
     </div>
 
-    <div class="grid-2">
-      <!-- 维度1 -->
+    <!-- 表格十字微雷达交互说明 -->
+    <div class="radar-popover-demo">
+      <div class="radar-cursor-box">
+        <div class="radar-cursor-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="21" y2="12"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></svg>
+        </div>
+        <div class="radar-cursor-title">极简十字微雷达光标</div>
+        <div class="radar-cursor-desc">位于表格第四列 · 20×20px 纯净排布<br>鼠标悬停浮现卡片 · 点击行切换联动</div>
+      </div>
+      <div class="info-text">
+        <strong>微雷达交互机制：</strong>原表格五字母方块已重构为单体极简十字雷达光标。鼠标悬停其上时，即刻展开 <code>mr-popover-card</code> 浮层，完整展现 V/P/D/T/M 五维量化评分条；点击行直接将下方的量化博弈罗盘聚焦于该标的。
+      </div>
+    </div>
+
+    <!-- 五维网格 -->
+    <div class="grid-5">
+      <!-- 维度 1: V -->
       <div class="meter-card">
         <div>
           <div class="meter-head">
             <div class="meter-name">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-              动能强度 (成交量量价配合)
+              <span class="meter-code-badge">V</span>
+              动能强度 (Volume Momentum)
             </div>
             <span class="meter-tag">量比指标</span>
           </div>
           <div class="meter-text">
-            健康的上行趋势必须伴随量能的有效放大。若价格快速拉升且成交量显著高于同期基准，表明多头推进动力扎实；若价格冲高但量能萎缩，往往提示买盘跟进不足，面临动能衰竭风险。
+            衡量成交量相对近期基准的放大倍数。健康上攻必须伴随放量配合；缩量推升往往暗示买盘后劲匮乏，存在动能衰竭风险。
           </div>
         </div>
         <div class="verdict-box">
           <span class="verdict-tag">量价研判</span>
-          <span class="verdict-text">放量推进确认资金进场，缩量冲高防范动能衰竭。</span>
+          <span class="verdict-text">放量推进确认资金入场，缩量冲高防范动能透支。</span>
         </div>
       </div>
 
-      <!-- 维度2 -->
+      <!-- 维度 2: P -->
       <div class="meter-card">
         <div>
           <div class="meter-head">
             <div class="meter-name">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              走势健康 (VWAP 均线支撑)
+              <span class="meter-code-badge">P</span>
+              均价偏离 (VWAP Bias)
             </div>
             <span class="meter-tag">持仓成本线</span>
           </div>
           <div class="meter-text">
-            分时黄线（成交量加权平均价 VWAP）代表日内全市场参与者的平均持仓成本。价格持续运行于黄线上方，全天持仓筹码普遍处于安全盈利状态；一旦跌破黄线，筹码转为浮亏承压，易引发连锁平仓。
+            分时黄线代表全市场日内持仓加权成本。价格稳居黄线上方表明日内多头处于盈利优势；一旦下穿黄线，筹码转入浮亏承压。
           </div>
         </div>
         <div class="verdict-box">
           <span class="verdict-tag">均线研判</span>
-          <span class="verdict-text">均线上方多头处于优势区间，跌破均线提示防守转弱。</span>
+          <span class="verdict-text">均线上方多头处于优势，破位下行提示防守转弱。</span>
         </div>
       </div>
 
-      <!-- 维度3 -->
+      <!-- 维度 3: D -->
       <div class="meter-card">
         <div>
           <div class="meter-head">
             <div class="meter-name">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-              挂单承接 (五档委托厚度)
+              <span class="meter-code-badge">D</span>
+              挂单承接 (Depth & Imbalance)
             </div>
-            <span class="meter-tag">委比失衡</span>
+            <span class="meter-tag">五档委比</span>
           </div>
           <div class="meter-text">
-            衡量五档买单与卖单的相对厚度。委买档位挂单深厚表明下方存在防守承接垫，提供下行缓冲；上方委卖档位密集积压则构成即时抛压阻力，上行需要消耗更多买方流动性。
+            监测买卖五档挂单的相对厚度。委买挂单厚实提供下行托垫；上方卖单密集积压则构成即时阻力，上行需消耗更多流动性。
           </div>
         </div>
         <div class="verdict-box">
           <span class="verdict-tag">委托研判</span>
-          <span class="verdict-text">委比大额为正提供承接垫，委比深度为负压制反弹空间。</span>
+          <span class="verdict-text">大额正委比提供防守垫，深度负委比压制反弹。</span>
         </div>
       </div>
 
-      <!-- 维度4 -->
+      <!-- 维度 4: T -->
       <div class="meter-card">
         <div>
           <div class="meter-head">
             <div class="meter-name">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              主力意图 (主动成交流向)
+              <span class="meter-code-badge">T</span>
+              主动流向 (Trade Flow)
             </div>
             <span class="meter-tag">内外盘占比</span>
           </div>
           <div class="meter-text">
-            盘口未成交挂单具有随时可撤销的不确定性。以卖价主动成交的外盘大单代表资金主动抢筹；外盘占比显著超过 50% 显示买方进场紧迫度高，而内盘主动砸盘占比扩大则提示资金可能暗中撤离。
+            盘口挂单可随时撤销，主动成交方体现真金意图。外盘主动抢买占比超 55% 显示买方进场迫切；内盘砸盘扩大则提示资金出逃。
           </div>
         </div>
         <div class="verdict-box">
           <span class="verdict-tag">意图研判</span>
-          <span class="verdict-text">外盘主动成交放量属真金建仓，内盘集中涌现提示资金撤退。</span>
+          <span class="verdict-text">外盘主动吃单属真金买入，内盘主卖集中提示资金撤离。</span>
+        </div>
+      </div>
+
+      <!-- 维度 5: M -->
+      <div class="meter-card">
+        <div>
+          <div class="meter-head">
+            <div class="meter-name">
+              <span class="meter-code-badge">M</span>
+              趋势均线 (Moving Average)
+            </div>
+            <span class="meter-tag">MA5/10/20</span>
+          </div>
+          <div class="meter-text">
+            日线级别 MA5、MA10 与 MA20 多空顺逆势排列。大周期处于多头排列时，分时下探多属洗盘回踩；大周期空头时反弹多属诱多。
+          </div>
+        </div>
+        <div class="verdict-box">
+          <span class="verdict-tag">大势研判</span>
+          <span class="verdict-text">顺大势做小级别波段，均线多头防守支撑坚实。</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 第三章：中栏 · 今日实战操盘对策 -->
+  <!-- 第四章：中栏 · 攻防标尺与双视角决策 -->
   <section>
     <div class="section-head">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
-        中栏：今日实战操盘对策（6大典型盘口信号）
+        第四章：中栏 · 攻防标尺与双视角操盘决策
       </div>
-      <div class="section-subtitle">分时量化对策库</div>
+      <div class="section-subtitle">关键量化点位与分时对策库</div>
     </div>
 
+    <!-- 攻防标尺模型展示 -->
+    <div class="keylevels-card">
+      <div style="font-size:13px; font-weight:700; color:#ffffff; margin-bottom:4px;">攻防标尺动态三线模型</div>
+      <div style="font-size:12px; color:var(--text-dim); margin-bottom:12px;">算法实时测算第一支撑、分时成本中枢与第一阻力，并计算现价相对各点位的安全差价百分比：</div>
+      <div class="keylevels-scale">
+        <div class="keylevel-node support">
+          <span class="keylevel-tag">第一支撑</span>
+          <span class="keylevel-val num">日内低点 / MA均线</span>
+          <span class="keylevel-sub">下行安全防守底线</span>
+        </div>
+        <div class="keylevel-node vwap">
+          <span class="keylevel-tag">成本分水岭</span>
+          <span class="keylevel-val num">VWAP 均价中枢</span>
+          <span class="keylevel-sub">全天多空强弱平衡轴</span>
+        </div>
+        <div class="keylevel-node resist">
+          <span class="keylevel-tag">第一阻力</span>
+          <span class="keylevel-val num">日内高点 / 均线反压</span>
+          <span class="keylevel-sub">冲刺滞涨分歧节点</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 双视角战术面板 -->
+    <div class="tactics-box">
+      <div class="tactic-card holder">
+        <div class="tactic-role">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          持仓者视角 (Holder Tactic)
+        </div>
+        <div class="tactic-text">
+          侧重仓位保护与盈利兑现节奏。在阻力位遇阻或偏离均线过大时执行分批止盈；在支撑位破位失守时严格执行止损止盈纪律，保全本金安全。
+        </div>
+      </div>
+      <div class="tactic-card watcher">
+        <div class="tactic-role">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+          观望者视角 (Watcher Tactic)
+        </div>
+        <div class="tactic-text">
+          侧重入场确定性与风险报酬比。拒绝在超买区盲目追高，耐心等待缩量回踩成本均线企稳、或上方密集压单被大单连续吞净后右侧介入。
+        </div>
+      </div>
+    </div>
+
+    <!-- 6大典型操盘信号卡 -->
     <div class="decision-grid">
       <!-- 规则 1 -->
       <div class="decision-card trim">
@@ -689,7 +1230,7 @@
           <div class="decision-header">
             <div class="decision-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--warn)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              超买乖离 · 冲高落袋
+              冲高落袋 · 乖离过热
             </div>
             <span class="decision-tag trim">分批减半</span>
           </div>
@@ -698,11 +1239,11 @@
             <span class="indicator">现价高于 VWAP &gt; +3.0%</span>
           </div>
           <div class="decision-desc">
-            日内价格短时间内急速拉升，大幅偏离全天平均成本线。由于短线获利筹码丰厚，上方容易遭遇突发性集中获利了结。
+            分时短线急速推升，大幅偏离全天加权平均买入成本。技术指标严重超买，上方极易遭遇集中获利抛压。
           </div>
         </div>
         <div class="decision-action">
-          <strong>执行建议：</strong>持仓者宜分批减半锁定利润，场外资金管住手切忌盲目追高。
+          <strong>执行对策：</strong>持仓者宜在阻力位附近减仓锁定利润，空仓者切忌冲高追涨。
         </div>
       </div>
 
@@ -718,37 +1259,37 @@
           </div>
           <div class="decision-meta">
             <span>触发阈值:</span>
-            <span class="indicator">现价跌破 VWAP &lt; -1.5%</span>
+            <span class="indicator">现价跌破 VWAP &lt; -1.5% 且日线偏弱</span>
           </div>
           <div class="decision-desc">
-            价格跌穿全天加权平均买入成本线，日内多数筹码陷入浮亏，空方完全掌控主导权，大概率进一步下探寻找支撑。
+            价格下穿全天成交加权均价线，日内参与者多数陷入浮亏，空方占据主动，存在进一步下探风险。
           </div>
         </div>
         <div class="decision-action">
-          <strong>执行建议：</strong>严格执行风控纪律离场保全本金，切忌在下行趋势中抱侥幸心理加仓抗单。
+          <strong>执行对策：</strong>第一支撑失守坚决执行防守减仓，切忌在下行趋势中抱侥幸心理盲目抗单。
         </div>
       </div>
 
       <!-- 规则 3 -->
-      <div class="decision-card buy">
+      <div class="decision-card neutral">
         <div>
           <div class="decision-header">
             <div class="decision-title">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--bull)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-              放量主攻 · 顺势跟进
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              多头回踩 · 洗盘洗筹
             </div>
-            <span class="decision-tag buy">顺势跟车</span>
+            <span class="decision-tag neutral">逢低观察</span>
           </div>
           <div class="decision-meta">
             <span>触发阈值:</span>
-            <span class="indicator">量比放大且价格稳居均线上方</span>
+            <span class="indicator">日内回踩均线但日线多头排列良好</span>
           </div>
           <div class="decision-desc">
-            成交量显著超越常态基准，价格在分时均线上方形成强势推升结构，显示大资金主动扫单发力。
+            日线趋势保持健康上行通道，分时盘中跌破均线属于良性洗盘清理浮筹，下方具备坚实大周期技术支撑。
           </div>
         </div>
         <div class="decision-action">
-          <strong>执行建议：</strong>顺应动能轻仓跟随买入，以分时均线作为移动止损底线持股待涨。
+          <strong>执行对策：</strong>持仓者守住日线防守位安心持股，观望者可观察支撑位企稳承接信号。
         </div>
       </div>
 
@@ -764,14 +1305,14 @@
           </div>
           <div class="decision-meta">
             <span>触发阈值:</span>
-            <span class="indicator">委买巨量挂单但价格滞涨无买力</span>
+            <span class="indicator">委买挂单巨量但主买无力且价格滞涨</span>
           </div>
           <div class="decision-desc">
-            下方买档堆积大额买单营造支撑假象，但盘口缺乏主动外盘吃单跟随，价格不涨反跌，属典型出货托单掩护。
+            下方买档堆积大额买单营造安全假象，但盘口缺乏主动外盘吃单跟随，属于典型出货掩护手法。
           </div>
         </div>
         <div class="decision-action">
-          <strong>执行建议：</strong>不盲信盘口虚假托单，趁承接流动性仍在果断止盈或减仓，提防主力撤单闪崩。
+          <strong>执行对策：</strong>趁下方流动性仍在逢高离场，切莫误将托单当支撑盲目抄底。
         </div>
       </div>
 
@@ -783,18 +1324,18 @@
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--bull)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
               强势吞单 · 主力扫货
             </div>
-            <span class="decision-tag buy">主力扫货</span>
+            <span class="decision-tag buy">顺势做多</span>
           </div>
           <div class="decision-meta">
             <span>触发阈值:</span>
-            <span class="indicator">密集大卖单被主动外盘连续吞并</span>
+            <span class="indicator">密集大卖单被主动外盘连续吃净</span>
           </div>
           <div class="decision-desc">
-            上方卖盘阻力沉重，但价格不跌，反而被密集大额主动外盘连续快速吃净，表明买方资金入场意愿极其迫切。
+            上方虽有密集压单，但价格不跌反涨，大资金以坚决态度向上连续吞单扫货，展现逼空拉升意图。
           </div>
         </div>
         <div class="decision-action">
-          <strong>执行建议：</strong>紧密跟踪阻力压单被吃掉八至九成节点，确认突破有效后可迅速跟进。
+          <strong>执行对策：</strong>紧跟压单被吃净节点，确认突破有效后顺应动能轻仓跟进。
         </div>
       </div>
 
@@ -804,48 +1345,48 @@
           <div class="decision-header">
             <div class="decision-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-              区间蓄势 · 稳健持股
+              区间蓄势 · 平稳持股
             </div>
-            <span class="decision-tag neutral">持股观望</span>
+            <span class="decision-tag neutral">锁定观望</span>
           </div>
           <div class="decision-meta">
             <span>触发阈值:</span>
-            <span class="indicator">价格贴合均线且成交量平稳</span>
+            <span class="indicator">价格贴合均线且量能处于常态</span>
           </div>
           <div class="decision-desc">
-            成交量和价格均在常态区间内波动，多空双方在均线附近平稳换手，未见单边拉升或砸盘动作。
+            成交量和价格均在常态区间换手，未见主力大举进攻或恶意砸盘动作，多空处于均衡博弈状态。
           </div>
         </div>
         <div class="decision-action">
-          <strong>执行建议：</strong>既有持仓保持耐心守仓，避免受日内分时微幅波动干扰；空仓者静待突破信号。
+          <strong>执行对策：</strong>守住关键支撑位安心持仓，避免被分时微幅波动干扰扰乱交易节奏。
         </div>
       </div>
     </div>
   </section>
 
-  <!-- 第四章：右栏 · 主力大资金买卖流 -->
+  <!-- 第五章：右栏 · 主力逐笔大单流 -->
   <section>
     <div class="section-head">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4M12 16V8"/></svg>
-        右栏：主力逐笔大单流（大资金异动雷达）
+        第五章：右栏 · 主力逐笔大单流（资金流向过滤网）
       </div>
-      <div class="section-subtitle">逐笔大单金额过滤</div>
+      <div class="section-subtitle">过滤碎单杂音与捕捉机构轨迹</div>
     </div>
 
-    <div class="orderflow-panel">
-      <p class="orderflow-text">
-        日内逐笔成交包含大量散户碎单。逐笔大单流开启大额阈值过滤网，过滤小单杂音，专注呈现机构与主力级别的主动攻防轨迹：
+    <div class="info-panel">
+      <p class="info-text">
+        日内分时成交包含大量散户小单。逐笔大单流通过设定大额门槛，过滤无意义噪音，专门呈现机构与主力级别的主动攻防订单：
       </p>
 
       <div class="tick-radar-box">
         <div class="tick-col buy">
           <div class="tick-col-title">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-            主动抢买（外盘红色标记）
+            主动抢买 (外盘红色买单)
           </div>
           <div class="tick-col-desc">
-            主动向上以卖方价格直接吃货成交。这表明大资金对筹码具备较强紧迫性，不计较一两分钱价差，属于明确的多头建仓信号。
+            以卖一及以上价格直接成交。表明大资金对筹码具备强迫切性，不计较即时微小价差，属于明确的多头建仓行为。
           </div>
           <div class="tick-pill-sample buy">12手 (152.3万) 抢买</div>
         </div>
@@ -853,10 +1394,10 @@
         <div class="tick-col sell">
           <div class="tick-col-title">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            主动砸盘（内盘绿色标记）
+            主动砸盘 (内盘绿色卖单)
           </div>
           <div class="tick-col-desc">
-            主动向下以买方价格直接抛售成交。这表明大资金具备变现退出意愿，属于空头主动抛售打压信号。
+            以买一及以下价格直接成交。表明大资金具备变现离场意愿，属于空头主动抛售打压行为。
           </div>
           <div class="tick-pill-sample sell">20手 (210.6万) 砸盘</div>
         </div>
@@ -865,39 +1406,114 @@
       <div class="tick-tip-box">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
         <span>
-          <strong>过滤建议：</strong>盘中在右栏切换 <strong>「≥20万」</strong> 或 <strong>「≥50万」</strong> 筛选标签，可过滤日内交易噪音，准确识别主力真实净流向。
+          <strong>过滤网使用建议：</strong>在右栏切换 <strong>「≥20万」</strong> 或 <strong>「≥50万」</strong> 筛选标签，可过滤日内散单交易噪音，快速核验主力真实净流向。
         </span>
       </div>
     </div>
   </section>
 
-  <!-- 第五章：3步极简操盘法则 -->
+  <!-- 第六章：盯盘主表格高密七列排版架构 -->
+  <section>
+    <div class="section-head">
+      <div class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        第六章：盯盘主表格高密七列排版架构
+      </div>
+      <div class="section-subtitle">信息降噪与高频盯盘操作流</div>
+    </div>
+
+    <div class="info-panel">
+      <p class="info-text">
+        盯盘主表格历经专业走查重塑，采用严谨的七列高密网格排布，彻底消除横向滚动条，各列职责清晰明确：
+      </p>
+
+      <div class="table-schema-grid">
+        <div class="schema-col-card">
+          <div class="schema-col-head">
+            <span class="schema-col-title">标的名称/代码</span>
+            <span class="schema-col-num">第 1 列</span>
+          </div>
+          <div class="schema-col-desc">名称加粗呈现，代码融入下方副标题，大幅节省横向版面。</div>
+        </div>
+
+        <div class="schema-col-card">
+          <div class="schema-col-head">
+            <span class="schema-col-title">现价/涨跌幅</span>
+            <span class="schema-col-num">第 2 列</span>
+          </div>
+          <div class="schema-col-desc">现价与涨跌幅纵向双行右对齐堆叠，小数点位严密对齐。</div>
+        </div>
+
+        <div class="schema-col-card">
+          <div class="schema-col-head">
+            <span class="schema-col-title">上限/下限预警</span>
+            <span class="schema-col-num">第 3 列</span>
+          </div>
+          <div class="schema-col-desc">双层结构化数值对齐，清晰标注目标止盈位与防守止损位。</div>
+        </div>
+
+        <div class="schema-col-card">
+          <div class="schema-col-head">
+            <span class="schema-col-title">五维微雷达</span>
+            <span class="schema-col-num">第 4 列</span>
+          </div>
+          <div class="schema-col-desc">单体极简雷达准星（20×20px），悬停浮现金卡，点击行联动聚焦。</div>
+        </div>
+
+        <div class="schema-col-card">
+          <div class="schema-col-head">
+            <span class="schema-col-title">异动状态指示</span>
+            <span class="schema-col-num">第 5 列</span>
+          </div>
+          <div class="schema-col-desc">标记未触发、已触发、临界逼近或分时超买超卖状态徽章。</div>
+        </div>
+
+        <div class="schema-col-card">
+          <div class="schema-col-head">
+            <span class="schema-col-title">最新资讯/公告</span>
+            <span class="schema-col-num">第 6 列</span>
+          </div>
+          <div class="schema-col-desc">实时展示东方财富最新公告研报摘要，点击直达分时快讯。</div>
+        </div>
+
+        <div class="schema-col-card">
+          <div class="schema-col-head">
+            <span class="schema-col-title">改价/删除操作</span>
+            <span class="schema-col-num">第 7 列</span>
+          </div>
+          <div class="schema-col-desc">操作按钮分级布局，严防误触删除，操作响应迅速高效。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 第七章：3步极简操盘法则 -->
   <section>
     <div class="section-head">
       <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        3步实战操盘流（高效看盘核验步骤）
+        第七章：3步极简操盘实战 SOP
       </div>
-      <div class="section-subtitle">快速研判与执行流程</div>
+      <div class="section-subtitle">从全盘巡视到下单执行标准流程</div>
     </div>
 
     <div class="steps-list">
       <div class="step-item">
         <span class="step-badge">步骤 01</span>
-        <div class="step-title">审视中栏对策</div>
-        <div class="step-desc">首先阅读中栏智能对策卡，快速掌握当前多空等级与风控指向（分批减半、防守撤离或顺势持仓）。</div>
+        <div class="step-title">顶栏全局巡航</div>
+        <div class="step-desc">首先扫视顶部异动雷达轮询视口，排查持仓标的是否存在到价突破、放量跳水或虚托诱多等突发紧急事件。</div>
       </div>
 
       <div class="step-item">
         <span class="step-badge">步骤 02</span>
-        <div class="step-title">核验均线位置</div>
-        <div class="step-desc">确认现价相对日内 VWAP 成本均线的偏离度，价格稳居黄线上方为多头优势区，跌破则提示谨慎。</div>
+        <div class="step-title">罗盘五维定策</div>
+        <div class="step-desc">点击聚焦标的，通过左栏 V/P/D/T/M 五维微雷达排查短板，参考中栏攻防标尺与持仓者/观望者双视角战术。</div>
       </div>
 
       <div class="step-item">
         <span class="step-badge">步骤 03</span>
-        <div class="step-title">验证大单流向</div>
-        <div class="step-desc">在右栏开启 ≥20万 或 ≥50万 大单过滤，验证盘中拉升或回调是否伴随主力级别真实资金进出。</div>
+        <div class="step-title">逐笔核实真伪</div>
+        <div class="step-desc">在右栏开启 ≥20万 或 ≥50万 大单过滤网，验证盘中拉升或回调是否伴随主力级别真金白银持续流向。</div>
       </div>
     </div>
   </section>
