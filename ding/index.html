@@ -211,19 +211,33 @@
   /* 添加表单 */
   .add-bar { display: grid; grid-template-columns: 1.6fr 1fr 1fr auto; gap: 12px; align-items: end; }
   .field { position: relative; }
-  .field label { display: block; font-size: 11px; color: var(--text-faint); margin-bottom: 6px; letter-spacing: 0.3px; }
-  .field-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 18px; }
-  .field-head-row label { margin-bottom: 0; }
-  .code-preview-badge { font-size: 10px; font-weight: 500; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: rgba(245, 166, 35, 0.12); color: var(--accent); border: 1px solid rgba(245, 166, 35, 0.3); vertical-align: middle; }
-  .quick-target-tags { display: inline-flex; align-items: center; gap: 4px; }
-  .target-tag-btn {
-    background: rgba(255, 93, 93, 0.1); color: #ff8a8a; border: 1px solid rgba(255, 93, 93, 0.25);
-    border-radius: 4px; font-size: 10px; padding: 1px 5px; cursor: pointer; font-family: inherit; line-height: 1.2;
-    transition: all 0.15s;
+  .field label { display: block; font-size: 11px; color: var(--text-faint); margin-bottom: 6px; letter-spacing: 0.3px; white-space: nowrap; }
+  .field-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; min-height: 20px; gap: 6px; }
+  .field-head-row label { margin-bottom: 0; white-space: nowrap; flex-shrink: 0; }
+  .code-preview-badge {
+    font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 999px;
+    background: rgba(17, 26, 44, 0.85); border: 1px solid rgba(148, 173, 214, 0.22);
+    display: inline-flex; align-items: center; gap: 4px; vertical-align: middle;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   }
-  .target-tag-btn:hover { background: rgba(255, 93, 93, 0.22); border-color: rgba(255, 93, 93, 0.5); color: #fff; transform: translateY(-1px); }
-  .target-tag-btn.down { background: rgba(23, 201, 143, 0.1); color: #6ee7b7; border: 1px solid rgba(23, 201, 143, 0.25); }
-  .target-tag-btn.down:hover { background: rgba(23, 201, 143, 0.22); border-color: rgba(23, 201, 143, 0.5); color: #fff; }
+  .quick-target-tags { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; }
+  .target-tag-btn {
+    background: rgba(255, 93, 93, 0.08); color: #ff7b7b; border: 1px solid rgba(255, 93, 93, 0.22);
+    border-radius: 999px; font-size: 10px; font-weight: 600; padding: 1px 5px; cursor: pointer;
+    font-family: var(--font-num, ui-monospace, monospace); line-height: 1.2;
+    transition: all 0.15s ease;
+  }
+  .target-tag-btn:hover {
+    background: rgba(255, 93, 93, 0.22); border-color: rgba(255, 93, 93, 0.5); color: #fff;
+    transform: translateY(-1px); box-shadow: 0 2px 6px rgba(255, 93, 93, 0.25);
+  }
+  .target-tag-btn.down {
+    background: rgba(23, 201, 143, 0.08); color: #4ade80; border: 1px solid rgba(23, 201, 143, 0.22);
+  }
+  .target-tag-btn.down:hover {
+    background: rgba(23, 201, 143, 0.22); border-color: rgba(23, 201, 143, 0.5); color: #fff;
+    box-shadow: 0 2px 6px rgba(23, 201, 143, 0.25);
+  }
   .field input, .field select {
     width: 100%; height: 38px; padding: 0 12px;
     background: var(--panel-2); color: var(--text);
@@ -232,6 +246,15 @@
   }
   .field input:focus, .field select:focus { border-color: rgba(245,166,35,.55); }
   .field input::placeholder { color: var(--text-faint); }
+  /* 隐藏浏览器原生 number 箭头，消除遮挡并保持专业质感 */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
   .suggest {
     position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 40;
     background: #0e1830; border: 1px solid var(--line); border-radius: 8px;
@@ -2070,14 +2093,17 @@
   <section class="card">
     <div class="add-bar">
       <div class="field">
-        <label for="codeInput">股票代码 / 名称 <span id="codePreviewBadge" class="code-preview-badge" style="display: none;"></span></label>
+        <div class="field-head-row">
+          <label for="codeInput">股票代码 / 名称</label>
+          <span id="codePreviewBadge" class="code-preview-badge" style="display: none;"></span>
+        </div>
         <input id="codeInput" type="text" autocomplete="off" spellcheck="false"
                placeholder="输入代码或拼音，如 600519 / 00700 / 茅台">
         <div id="suggestBox" class="suggest"></div>
       </div>
       <div class="field">
         <div class="field-head-row">
-          <label for="upperInput">上限目标（≥ 突破/止盈）</label>
+          <label for="upperInput">突破止盈 (≥)</label>
           <div id="upperQuickTags" class="quick-target-tags" style="display: none;">
             <button type="button" class="target-tag-btn" data-pct="2">+2%</button>
             <button type="button" class="target-tag-btn" data-pct="3">+3%</button>
@@ -2085,11 +2111,11 @@
             <button type="button" class="target-tag-btn" data-pct="8">+8%</button>
           </div>
         </div>
-        <input id="upperInput" type="number" min="0" step="0.01" placeholder="选填，如 1300 或 450">
+        <input id="upperInput" type="number" min="0" step="0.01" placeholder="选填，如 1300">
       </div>
       <div class="field">
         <div class="field-head-row">
-          <label for="lowerInput">下限目标（≤ 跌破/止损）</label>
+          <label for="lowerInput">跌破止损 (≤)</label>
           <div id="lowerQuickTags" class="quick-target-tags" style="display: none;">
             <button type="button" class="target-tag-btn down" data-pct="-2">-2%</button>
             <button type="button" class="target-tag-btn down" data-pct="-3">-3%</button>
@@ -2097,7 +2123,7 @@
             <button type="button" class="target-tag-btn down" data-pct="-8">-8%</button>
           </div>
         </div>
-        <input id="lowerInput" type="number" min="0" step="0.01" placeholder="选填，如 1200 或 410">
+        <input id="lowerInput" type="number" min="0" step="0.01" placeholder="选填，如 1200">
       </div>
       <button id="addBtn" class="btn btn-primary">
         <span>＋</span> 添加监控
@@ -2511,7 +2537,7 @@
     <h3 id="modalTitle">调整监控目标</h3>
     <div class="form-row field">
       <div class="field-head-row">
-        <label for="editUpperInput">上限目标（≥ 突破/止盈，留空则不监控上限）</label>
+        <label for="editUpperInput">突破止盈 (≥)</label>
         <div id="editUpperQuickTags" class="quick-target-tags" style="display: none;">
           <button type="button" class="target-tag-btn" data-pct="2">+2%</button>
           <button type="button" class="target-tag-btn" data-pct="3">+3%</button>
@@ -2523,7 +2549,7 @@
     </div>
     <div class="form-row field">
       <div class="field-head-row">
-        <label for="editLowerInput">下限目标（≤ 跌破/止损，留空则不监控下限）</label>
+        <label for="editLowerInput">跌破止损 (≤)</label>
         <div id="editLowerQuickTags" class="quick-target-tags" style="display: none;">
           <button type="button" class="target-tag-btn down" data-pct="-2">-2%</button>
           <button type="button" class="target-tag-btn down" data-pct="-3">-3%</button>
@@ -6499,6 +6525,7 @@ function addMonitor() {
   els.upperInput.value = '';
   els.lowerInput.value = '';
   els.suggestBox.classList.remove('open');
+  updateTargetHints(null);
   ensureAudio();
 
   if ('Notification' in window && Notification.permission === 'default') {
@@ -6585,6 +6612,21 @@ function openEditModal(id) {
   els.modalTitle.textContent = '调整 ' + (q ? q.name : it.code) + ' 监控目标';
   els.editUpperInput.value = it.upperTarget != null ? it.upperTarget : '';
   els.editLowerInput.value = it.lowerTarget != null ? it.lowerTarget : '';
+
+  if (q && q.price > 0) {
+    const p3 = fmt(q.price * 1.03, q.decimals);
+    const m3 = fmt(q.price * 0.97, q.decimals);
+    els.editUpperInput.placeholder = '参考: ' + p3 + ' (+3%)';
+    els.editLowerInput.placeholder = '参考: ' + m3 + ' (-3%)';
+    if (els.editUpperQuickTags) els.editUpperQuickTags.style.display = 'inline-flex';
+    if (els.editLowerQuickTags) els.editLowerQuickTags.style.display = 'inline-flex';
+  } else {
+    els.editUpperInput.placeholder = '留空则不监控上限';
+    els.editLowerInput.placeholder = '留空则不监控下限';
+    if (els.editUpperQuickTags) els.editUpperQuickTags.style.display = 'none';
+    if (els.editLowerQuickTags) els.editLowerQuickTags.style.display = 'none';
+  }
+
   els.editModal.classList.add('open');
   els.editUpperInput.focus();
 }
@@ -7093,9 +7135,86 @@ function restartTimer() {
   }
 }
 
+/* ================= 代码输入联动实时行情与上下限智能建议 ================= */
+let currentInputQuote = null;
+let inputDebounceTimer = null;
+
+function updateTargetHints(q) {
+  currentInputQuote = q;
+  if (q && q.price > 0) {
+    if (els.codePreviewBadge) {
+      els.codePreviewBadge.style.display = 'inline-flex';
+      const chgSign = q.change > 0 ? '+' : '';
+      const colorCls = q.change > 0 ? 'up' : (q.change < 0 ? 'down' : 'flat');
+      const dotCol = q.change > 0 ? '#ff5d5d' : (q.change < 0 ? '#17c98f' : '#8fa3c3');
+      els.codePreviewBadge.innerHTML =
+        '<span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:' + dotCol + '; flex-shrink:0;"></span>' +
+        '<span style="color:var(--text); font-weight:600; margin-right:2px;">' + q.name + '</span> ' +
+        '<b class="num ' + colorCls + '">' + fmt(q.price, q.decimals) + '</b> ' +
+        '<span class="num ' + colorCls + '" style="font-size:9.5px; opacity:0.9;">(' + chgSign + fmt(q.changePct, 2) + '%)</span>';
+    }
+    const p3 = fmt(q.price * 1.03, q.decimals);
+    const m3 = fmt(q.price * 0.97, q.decimals);
+    els.upperInput.placeholder = '参考: ' + p3 + ' (+3%)';
+    els.lowerInput.placeholder = '参考: ' + m3 + ' (-3%)';
+    if (els.upperQuickTags) els.upperQuickTags.style.display = 'inline-flex';
+    if (els.lowerQuickTags) els.lowerQuickTags.style.display = 'inline-flex';
+  } else {
+    if (els.codePreviewBadge) {
+      els.codePreviewBadge.style.display = 'none';
+      els.codePreviewBadge.innerHTML = '';
+    }
+    els.upperInput.placeholder = '选填，如 1300';
+    els.lowerInput.placeholder = '选填，如 1200';
+    if (els.upperQuickTags) els.upperQuickTags.style.display = 'none';
+    if (els.lowerQuickTags) els.lowerQuickTags.style.display = 'none';
+  }
+}
+
+async function handleCodeInputForQuote(rawVal) {
+  if (inputDebounceTimer) clearTimeout(inputDebounceTimer);
+  const trimmed = (rawVal || '').trim();
+  if (!trimmed) {
+    updateTargetHints(null);
+    return;
+  }
+  let code = normalizeCode(trimmed);
+  if (!code) {
+    const hit = POPULAR.find(x => x.n.includes(trimmed) || x.c.includes(trimmed.toLowerCase()));
+    if (hit) code = hit.c;
+  }
+  if (!code) {
+    updateTargetHints(null);
+    return;
+  }
+
+  // 若内存中已有现价，优先即时联动更新
+  if (quotes[code] && quotes[code].price > 0) {
+    updateTargetHints(quotes[code]);
+  }
+
+  // 轻量防抖获取最新行情
+  inputDebounceTimer = setTimeout(async () => {
+    try {
+      const res = await fetchBatchQuotes([code]);
+      if (res && res[code] && res[code].price > 0) {
+        quotes[code] = res[code];
+        const curRaw = els.codeInput.value.trim();
+        const curCode = normalizeCode(curRaw);
+        if (curCode === code || curRaw.includes(res[code].name) || res[code].name.includes(curRaw)) {
+          updateTargetHints(res[code]);
+        }
+      }
+    } catch (e) {}
+  }, 200);
+}
+
 /* ================= 事件监听绑定 ================= */
 els.addBtn.addEventListener('click', addMonitor);
-els.codeInput.addEventListener('input', () => renderSuggest(els.codeInput.value));
+els.codeInput.addEventListener('input', () => {
+  renderSuggest(els.codeInput.value);
+  handleCodeInputForQuote(els.codeInput.value);
+});
 els.codeInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -7126,9 +7245,58 @@ els.suggestBox.addEventListener('mousedown', e => {
     e.preventDefault();
     els.codeInput.value = it.dataset.c;
     els.suggestBox.classList.remove('open');
+    handleCodeInputForQuote(it.dataset.c);
     els.upperInput.focus();
   }
 });
+
+// 快捷百分比点选按钮交互
+if (els.upperQuickTags) {
+  els.upperQuickTags.addEventListener('click', e => {
+    const btn = e.target.closest('.target-tag-btn');
+    if (!btn || !currentInputQuote || !currentInputQuote.price) return;
+    const pct = parseFloat(btn.dataset.pct);
+    const target = currentInputQuote.price * (1 + pct / 100);
+    els.upperInput.value = fmt(target, currentInputQuote.decimals);
+    els.upperInput.focus();
+  });
+}
+if (els.lowerQuickTags) {
+  els.lowerQuickTags.addEventListener('click', e => {
+    const btn = e.target.closest('.target-tag-btn');
+    if (!btn || !currentInputQuote || !currentInputQuote.price) return;
+    const pct = parseFloat(btn.dataset.pct);
+    const target = currentInputQuote.price * (1 + pct / 100);
+    els.lowerInput.value = fmt(target, currentInputQuote.decimals);
+    els.lowerInput.focus();
+  });
+}
+if (els.editUpperQuickTags) {
+  els.editUpperQuickTags.addEventListener('click', e => {
+    const btn = e.target.closest('.target-tag-btn');
+    if (!btn || !editingMonitorId) return;
+    const it = monitors.find(m => m.id === editingMonitorId);
+    if (!it) return;
+    const q = quotes[it.code];
+    if (!q || !q.price) return;
+    const pct = parseFloat(btn.dataset.pct);
+    els.editUpperInput.value = fmt(q.price * (1 + pct / 100), q.decimals);
+    els.editUpperInput.focus();
+  });
+}
+if (els.editLowerQuickTags) {
+  els.editLowerQuickTags.addEventListener('click', e => {
+    const btn = e.target.closest('.target-tag-btn');
+    if (!btn || !editingMonitorId) return;
+    const it = monitors.find(m => m.id === editingMonitorId);
+    if (!it) return;
+    const q = quotes[it.code];
+    if (!q || !q.price) return;
+    const pct = parseFloat(btn.dataset.pct);
+    els.editLowerInput.value = fmt(q.price * (1 + pct / 100), q.decimals);
+    els.editLowerInput.focus();
+  });
+}
 
 /* 设置气泡浮层交互控制 */
 function toggleSettingsPopover(force) {
