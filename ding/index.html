@@ -416,9 +416,83 @@
     background: linear-gradient(90deg, rgba(255, 71, 87, 0.18), rgba(245, 166, 35, 0.16)) !important;
     animation: flash-row 1.2s infinite ease-in-out;
   }
+  tbody tr.row-triggered-danger {
+    background: linear-gradient(90deg, rgba(255, 71, 87, 0.22), rgba(255, 71, 87, 0.08)) !important;
+    animation: flash-row-danger 1.2s infinite ease-in-out;
+  }
+  tbody tr.row-triggered-warn {
+    background: linear-gradient(90deg, rgba(245, 166, 35, 0.22), rgba(245, 166, 35, 0.08)) !important;
+    animation: flash-row-warn 1.2s infinite ease-in-out;
+  }
+  tbody tr.row-triggered-info {
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.2), rgba(56, 189, 248, 0.06)) !important;
+    animation: flash-row-info 1.2s infinite ease-in-out;
+  }
   @keyframes flash-row {
     0%, 100% { box-shadow: inset 0 0 0 rgba(255, 71, 87, 0); }
     50% { box-shadow: inset 0 0 16px rgba(255, 71, 87, 0.35); }
+  }
+  @keyframes flash-row-danger {
+    0%, 100% { box-shadow: inset 0 0 0 rgba(255, 71, 87, 0); }
+    50% { box-shadow: inset 0 0 18px rgba(255, 71, 87, 0.45); }
+  }
+  @keyframes flash-row-warn {
+    0%, 100% { box-shadow: inset 0 0 0 rgba(245, 166, 35, 0); }
+    50% { box-shadow: inset 0 0 16px rgba(245, 166, 35, 0.45); }
+  }
+  @keyframes flash-row-info {
+    0%, 100% { box-shadow: inset 0 0 0 rgba(56, 189, 248, 0); }
+    50% { box-shadow: inset 0 0 14px rgba(56, 189, 248, 0.4); }
+  }
+
+  /* 行内原因胶囊 */
+  .row-cause-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    line-height: 1.3;
+    white-space: nowrap;
+    user-select: none;
+    margin-left: 6px;
+  }
+  .row-cause-pill.cause-danger {
+    background: rgba(255, 71, 87, 0.2);
+    color: #ff7b8b;
+    border: 1px solid rgba(255, 71, 87, 0.55);
+    animation: pill-pulse-danger 1s infinite alternate;
+  }
+  .row-cause-pill.cause-warn {
+    background: rgba(245, 166, 35, 0.18);
+    color: #ffa502;
+    border: 1px solid rgba(245, 166, 35, 0.5);
+  }
+  .row-cause-pill.cause-info {
+    background: rgba(56, 189, 248, 0.18);
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.45);
+  }
+  @keyframes pill-pulse-danger {
+    0% { opacity: 0.85; }
+    100% { opacity: 1; box-shadow: 0 0 6px rgba(255, 71, 87, 0.45); }
+  }
+  .badge-triggered.badge-danger {
+    color: #ff9f9f;
+    background: rgba(255, 71, 87, 0.22);
+    border-color: rgba(255, 71, 87, 0.6);
+  }
+  .badge-triggered.badge-warn {
+    color: #ffd180;
+    background: rgba(245, 166, 35, 0.22);
+    border-color: rgba(245, 166, 35, 0.6);
+  }
+  .badge-triggered.badge-info {
+    color: #93c5fd;
+    background: rgba(59, 130, 246, 0.22);
+    border-color: rgba(59, 130, 246, 0.6);
   }
   td { padding: 9px 12px; vertical-align: middle; white-space: nowrap; font-size: 13px; }
   td.text-right { text-align: right; }
@@ -1025,25 +1099,41 @@
     font-size: 11px;
   }
 
-  /* ================= 顶部全局异动脉冲 HUD ================= */
+  /* ================= 盘口声呐 · Sonar (全局异动与攻防告警中枢) ================= */
   .global-pulse-hud {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    background: linear-gradient(90deg, rgba(245, 166, 35, 0.12) 0%, rgba(17, 26, 44, 0.95) 15%, rgba(17, 26, 44, 0.95) 85%, rgba(56, 189, 248, 0.12) 100%);
-    border: 1px solid rgba(245, 166, 35, 0.28);
+    gap: 10px;
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.12) 0%, rgba(17, 26, 44, 0.96) 15%, rgba(17, 26, 44, 0.96) 85%, rgba(245, 166, 35, 0.12) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.28);
     border-radius: 8px;
-    padding: 7px 14px;
+    padding: 6px 12px;
     margin-bottom: 14px;
     font-size: 12px;
+    min-height: 42px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
     position: relative;
     overflow: hidden;
-    transition: border-color .2s;
+    transition: all .25s ease;
   }
   .global-pulse-hud:hover {
-    border-color: rgba(245, 166, 35, 0.5);
+    border-color: rgba(56, 189, 248, 0.5);
+  }
+  .global-pulse-hud.is-alerting {
+    background: linear-gradient(90deg, rgba(255, 71, 87, 0.25) 0%, rgba(23, 31, 51, 0.98) 15%, rgba(23, 31, 51, 0.98) 85%, rgba(255, 71, 87, 0.25) 100%);
+    border-color: rgba(255, 71, 87, 0.7);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 71, 87, 0.3);
+    animation: sonar-alert-pulse 1.6s infinite ease-in-out;
+  }
+  .global-pulse-hud.is-alerting.warn-only {
+    background: linear-gradient(90deg, rgba(245, 166, 35, 0.25) 0%, rgba(23, 31, 51, 0.98) 15%, rgba(23, 31, 51, 0.98) 85%, rgba(245, 166, 35, 0.25) 100%);
+    border-color: rgba(245, 166, 35, 0.7);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(245, 166, 35, 0.3);
+  }
+  @keyframes sonar-alert-pulse {
+    0%, 100% { border-color: rgba(255, 71, 87, 0.55); box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 10px rgba(255, 71, 87, 0.2); }
+    50% { border-color: rgba(255, 71, 87, 0.95); box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 20px rgba(255, 71, 87, 0.45); }
   }
   .gph-header {
     display: inline-flex;
@@ -1057,29 +1147,130 @@
     gap: 5px;
     font-size: 11px;
     font-weight: 700;
-    color: var(--accent);
-    background: rgba(245, 166, 35, 0.16);
-    border: 1px solid rgba(245, 166, 35, 0.35);
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.35);
     padding: 2px 8px;
     border-radius: 4px;
     letter-spacing: 0.3px;
     user-select: none;
+    transition: all .2s;
+  }
+  .global-pulse-hud.is-alerting .gph-badge {
+    color: #fff;
+    background: rgba(255, 71, 87, 0.35);
+    border-color: rgba(255, 71, 87, 0.7);
+    animation: gph-badge-shake 0.8s infinite ease-in-out;
+  }
+  @keyframes gph-badge-shake {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(-8deg); }
+    40% { transform: rotate(8deg); }
+    60% { transform: rotate(-5deg); }
+    80% { transform: rotate(5deg); }
   }
   .gph-count-pill {
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 600;
-    padding: 1px 6px;
+    padding: 1px 7px;
     border-radius: 999px;
-    background: rgba(255, 93, 93, 0.18);
-    color: var(--up);
-    border: 1px solid rgba(255, 93, 93, 0.35);
+    background: rgba(148, 173, 214, 0.1);
+    color: var(--text-dim);
+    border: 1px solid var(--line);
     white-space: nowrap;
-    user-select: none;
+    transition: all .2s;
+  }
+  .gph-count-pill.alerting {
+    background: rgba(255, 71, 87, 0.25);
+    color: #ff8b99;
+    border-color: rgba(255, 71, 87, 0.6);
   }
   .gph-count-pill.calm {
     background: rgba(148, 173, 214, 0.1);
     color: var(--text-dim);
     border-color: var(--line);
+  }
+  .sonar-mute-btn {
+    height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .sonar-mute-btn:hover {
+    color: var(--text);
+    border-color: rgba(148, 173, 214, 0.35);
+  }
+  .sonar-mute-btn.active {
+    background: rgba(255, 71, 87, 0.2);
+    color: #ff9f9f;
+    border-color: rgba(255, 71, 87, 0.5);
+  }
+  .sonar-alert-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    background: rgba(255, 71, 87, 0.18);
+    border: 1px solid rgba(255, 71, 87, 0.45);
+    color: #ff9da8;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s ease;
+    user-select: none;
+  }
+  .sonar-alert-card:hover {
+    background: rgba(255, 71, 87, 0.32);
+    border-color: rgba(255, 71, 87, 0.85);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.35);
+  }
+  .sonar-alert-card.warn {
+    background: rgba(245, 166, 35, 0.18);
+    border-color: rgba(245, 166, 35, 0.45);
+    color: #ffd285;
+  }
+  .sonar-alert-card.warn:hover {
+    background: rgba(245, 166, 35, 0.32);
+    border-color: rgba(245, 166, 35, 0.85);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(245, 166, 35, 0.35);
+  }
+  .sonar-card-name {
+    font-weight: 700;
+    color: #fff;
+  }
+  .sonar-card-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    line-height: 1.2;
+  }
+  .sonar-alert-card.danger .sonar-card-badge {
+    background: rgba(255, 71, 87, 0.4);
+    color: #fff;
+  }
+  .sonar-alert-card.warn .sonar-card-badge {
+    background: rgba(245, 166, 35, 0.4);
+    color: #fff;
+  }
+  .sonar-card-detail {
+    font-family: Bahnschrift, "DIN Alternate", monospace;
+    font-size: 11px;
+    opacity: 0.92;
   }
   .gph-body {
     flex: 1;
@@ -2045,6 +2236,64 @@
             </div>
           </div>
 
+          <!-- 监控预警类型 (5维攻防防线全局开关) -->
+          <div class="popover-section">
+            <div class="popover-section-label" style="display: flex; justify-content: space-between; align-items: center;">
+              <span>监控预警类型</span>
+              <span style="font-size: 10px; color: var(--text-faint); font-weight: 400;">默认全开，按需取消</span>
+            </div>
+            <div class="popover-row">
+              <div>
+                <label for="cfgAlertUpper" class="row-label">▲ 突破上限目标</label>
+                <div class="row-desc">现价 ≥ 设定上限目标位（止盈）</div>
+              </div>
+              <label class="switch-toggle" title="全局启用或关闭上限突破预警">
+                <input type="checkbox" id="cfgAlertUpper" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="popover-row">
+              <div>
+                <label for="cfgAlertLower" class="row-label">▼ 跌破下限目标</label>
+                <div class="row-desc">现价 ≤ 设定下限目标位（止损）</div>
+              </div>
+              <label class="switch-toggle" title="全局启用或关闭下限跌破预警">
+                <input type="checkbox" id="cfgAlertLower" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="popover-row">
+              <div>
+                <label for="cfgAlertVwap" class="row-label">⚡ 均价线破位</label>
+                <div class="row-desc">跌破分时均价线 VWAP -0.8%</div>
+              </div>
+              <label class="switch-toggle" title="全局启用或关闭均价线破位预警">
+                <input type="checkbox" id="cfgAlertVwap" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="popover-row">
+              <div>
+                <label for="cfgAlertRapidDrop" class="row-label">🔥 3分钟急速跳水</label>
+                <div class="row-desc">滑动时间窗口急跌 ≥ 2.0%</div>
+              </div>
+              <label class="switch-toggle" title="全局启用或关闭急速跳水预警">
+                <input type="checkbox" id="cfgAlertRapidDrop" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+            <div class="popover-row">
+              <div>
+                <label for="cfgAlertVolSpike" class="row-label">🌊 盘中量比突增</label>
+                <div class="row-desc">量比 ≥ 3.0x 主力异动放量</div>
+              </div>
+              <label class="switch-toggle" title="全局启用或关闭量比突变预警">
+                <input type="checkbox" id="cfgAlertVolSpike" checked>
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+
           <!-- 手机扫码同步 -->
           <div class="popover-section popover-footer">
             <div class="popover-section-label">手机直通同步</div>
@@ -2071,15 +2320,15 @@
     </div>
   </header>
 
-  <!-- 全局异动脉冲 HUD 轮询看板 -->
-  <div class="global-pulse-hud" id="globalPulseHud" style="display: none;" role="region" aria-label="实时异动雷达">
+  <!-- 盘口声呐 · Sonar (全局异动与攻防预警中枢) -->
+  <div class="global-pulse-hud" id="globalPulseHud" style="display: none;" role="region" aria-label="盘口声呐 · 攻防预警中枢">
     <div class="gph-header">
-      <span class="gph-badge">⚡ 异动雷达</span>
-      <span class="gph-count-pill" id="gphCountPill">0条异动</span>
+      <span class="gph-badge" id="sonarBadge">📡 盘口声呐</span>
+      <span class="gph-count-pill" id="gphCountPill">常态巡检</span>
     </div>
     <div class="gph-body">
       <div class="gph-stream" id="gphStream">
-        <!-- 动态轮询异动信号 -->
+        <!-- 动态渲染警报磁贴或轮询异动信号 -->
       </div>
     </div>
     <div class="gph-controls" id="gphControls" style="display: none;">
@@ -2087,6 +2336,7 @@
       <span class="gph-pagination" id="gphPagination">1/1</span>
       <button class="gph-ctrl-btn" id="gphNextBtn" title="下一条异动" aria-label="下一条异动">›</button>
     </div>
+    <button class="sonar-mute-btn" id="sonarMuteBtn" style="display: none;" title="保持高亮，单次静音当前警报音效">🔕 静音</button>
   </div>
 
   <!-- 添加新监控表单（支持双向预警） -->
@@ -2135,9 +2385,9 @@
         <span class="tip-sep">/</span>
         <span class="tip-tag-item">支持双向到价预警</span>
         <span class="tip-sep">/</span>
-        <span class="tip-tag-item">本地自动留存</span>
+        <span class="tip-tag-item">5维攻防预警</span>
       </div>
-      <div class="audio-status-pill ready" id="audioStatusPill" title="提示音系统正常：标的到价将自动响铃 (点击可试听)">
+      <div class="audio-status-pill ready" id="audioStatusPill" style="margin-left: auto;" title="提示音系统正常：标的到价将自动响铃 (点击可试听)">
         <span class="audio-led"></span>
         <span id="audioTip" class="audio-label">音频已就绪</span>
       </div>
@@ -2559,6 +2809,23 @@
       </div>
       <input id="editLowerInput" type="number" min="0" step="0.01" placeholder="留空则不监控下限">
     </div>
+    <div class="form-row" style="margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--line);">
+      <div style="font-size: 11px; font-weight: 600; color: var(--text-faint); margin-bottom: 8px; letter-spacing: 0.3px;">智能防线监控 (满足即报)</div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text); cursor: pointer;">
+          <span>⚡ 跌破分时均价线 (VWAP -0.8%)</span>
+          <input type="checkbox" id="editVwapCheck" style="accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer;">
+        </label>
+        <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text); cursor: pointer;">
+          <span>🔥 3分钟急速跳水 (急跌 -2.0%)</span>
+          <input type="checkbox" id="editRapidDropCheck" style="accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer;">
+        </label>
+        <label style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: var(--text); cursor: pointer;">
+          <span>🌊 盘中量比异常突变 (量比 ≥ 3.0x)</span>
+          <input type="checkbox" id="editVolSpikeCheck" style="accent-color: var(--accent); width: 16px; height: 16px; cursor: pointer;">
+        </label>
+      </div>
+    </div>
     <div class="modal-btns">
       <button id="modalCancelBtn" class="btn btn-ghost btn-sm">取消</button>
       <button id="modalSaveBtn" class="btn btn-primary btn-sm">保存并重新监控</button>
@@ -2613,8 +2880,17 @@ const INTERVAL_KEY = 'stock_alarm_v2_interval';
 const SOUND_TYPE_KEY = 'stock_alarm_v2_sound_type';
 const SOUND_VOL_KEY = 'stock_alarm_v2_sound_vol';
 const THROTTLE_KEY = 'stock_alarm_v2_throttle';
+const ALERT_SETTINGS_KEY = 'stock_alarm_v2_alert_settings';
+const DEFAULT_ALERT_SETTINGS = {
+  upper: true,      // 突破上限
+  lower: true,      // 跌破下限
+  vwap: true,       // 跌破均价线
+  rapidDrop: true,  // 3分钟急跌
+  volSpike: true    // 量比突增
+};
+let globalAlertSettings = { ...DEFAULT_ALERT_SETTINGS };
 
-let monitors = [];       // [{ id, code, upperTarget, lowerTarget, status, triggeredReason }]
+let monitors = [];       // [{ id, code, upperTarget, lowerTarget, status, triggeredReason, triggeredDetail, triggeredLevel, triggeredTime, smartAlerts }]
 let quotes = {};         // { [code]: quoteObj }
 let selectedId = null;   // 当前展示分时图的 monitorId
 let isChartCollapsed = false; // 用户是否手动收起了走势图
@@ -2629,6 +2905,8 @@ let smartThrottleEnabled = true;
 let isThrottling = false;
 let lastAppliedMarketState = 'none';
 let prevPrices = {};          // 上一轮成交价缓存，用于比对跳价动效
+let recentPriceHistory = {};  // 最近几分钟价格历史 { [code]: [{ time, price }] } 用于急速跳水监测
+let isTemporaryMuted = false; // 报警本次单次静音状态
 let preciseWakeTimer = null;  // 精准毫秒级开市对齐唤醒定时器
 let currentChartRows = [];    // 当前选中标的的分时序列缓存
 let currentChartCode = null;  // 当前绘制分时图的标的代码
@@ -2647,6 +2925,11 @@ const els = {
   volumeRange: document.getElementById('volumeRange'),
   volumeVal: document.getElementById('volumeVal'),
   throttleToggle: document.getElementById('throttleToggle'),
+  cfgAlertUpper: document.getElementById('cfgAlertUpper'),
+  cfgAlertLower: document.getElementById('cfgAlertLower'),
+  cfgAlertVwap: document.getElementById('cfgAlertVwap'),
+  cfgAlertRapidDrop: document.getElementById('cfgAlertRapidDrop'),
+  cfgAlertVolSpike: document.getElementById('cfgAlertVolSpike'),
   testSoundBtn: document.getElementById('testSoundBtn'),
   exportBtn: document.getElementById('exportBtn'),
   importBtn: document.getElementById('importBtn'),
@@ -2683,8 +2966,13 @@ const els = {
   editUpperQuickTags: document.getElementById('editUpperQuickTags'),
   editLowerInput: document.getElementById('editLowerInput'),
   editLowerQuickTags: document.getElementById('editLowerQuickTags'),
+  editVwapCheck: document.getElementById('editVwapCheck'),
+  editRapidDropCheck: document.getElementById('editRapidDropCheck'),
+  editVolSpikeCheck: document.getElementById('editVolSpikeCheck'),
   modalCancelBtn: document.getElementById('modalCancelBtn'),
   modalSaveBtn: document.getElementById('modalSaveBtn'),
+  sonarBadge: document.getElementById('sonarBadge'),
+  sonarMuteBtn: document.getElementById('sonarMuteBtn'),
   qrSyncBtn: document.getElementById('qrSyncBtn'),
   tokenSyncBtn: document.getElementById('tokenSyncBtn'),
   syncModal: document.getElementById('syncModal'),
@@ -2824,7 +3112,15 @@ function normalizeMonitorItem(item) {
     upperTarget: upper,
     lowerTarget: lower,
     status: item.status === 'triggered' || item.status === 'paused' ? item.status : 'watching',
-    triggeredReason: item.triggeredReason || null
+    triggeredReason: item.triggeredReason || null,
+    triggeredDetail: item.triggeredDetail || null,
+    triggeredLevel: item.triggeredLevel || null,
+    triggeredTime: item.triggeredTime || null,
+    smartAlerts: {
+      vwap: item.smartAlerts && item.smartAlerts.vwap !== undefined ? Boolean(item.smartAlerts.vwap) : true,
+      rapidDrop: item.smartAlerts && item.smartAlerts.rapidDrop !== undefined ? Boolean(item.smartAlerts.rapidDrop) : true,
+      volSpike: item.smartAlerts && item.smartAlerts.volSpike !== undefined ? Boolean(item.smartAlerts.volSpike) : true
+    }
   };
 }
 
@@ -3143,19 +3439,43 @@ function playAlarmSound(type = currentSoundType, vol = currentVolume) {
   }
 }
 
+function getAlertReasonLabel(item) {
+  if (!item) return '到价警报';
+  if (item.triggeredReason === 'upper') return '▲ 突破上限';
+  if (item.triggeredReason === 'lower') return '▼ 跌破下限';
+  if (item.triggeredReason === 'vwap_break') return '⚡ 均价破位';
+  if (item.triggeredReason === 'rapid_drop') return '🔥 急速跳水';
+  if (item.triggeredReason === 'vol_spike') return '🌊 量比突增';
+  return '⚠ 到价触发';
+}
+
 function syncSoundAlarm() {
   const triggeredItems = monitors.filter(m => m.status === 'triggered');
   const hasTriggered = triggeredItems.length > 0;
+
+  // 驱动盘口声呐 HUD 刷新状态
+  AnomalyRadarEngine.update();
+
   if (hasTriggered) {
     startTitleFlashing(triggeredItems);
-    if (currentSoundType !== 'mute' && currentVolume > 0) {
+    if (currentSoundType !== 'mute' && currentVolume > 0 && !isTemporaryMuted) {
+      const hasDanger = triggeredItems.some(m => m.triggeredLevel === 'danger' || m.triggeredReason === 'lower' || m.triggeredReason === 'vwap_break' || m.triggeredReason === 'rapid_drop');
+      const soundTypeToPlay = hasDanger ? (currentSoundType === 'siren' ? 'siren' : 'radar') : currentSoundType;
       if (!soundLoopTimer) {
-        playAlarmSound();
-        soundLoopTimer = setInterval(() => playAlarmSound(), 3500);
+        playAlarmSound(soundTypeToPlay);
+        soundLoopTimer = setInterval(() => {
+          if (!isTemporaryMuted) playAlarmSound(soundTypeToPlay);
+        }, 3500);
+      }
+    } else {
+      if (soundLoopTimer) {
+        clearInterval(soundLoopTimer);
+        soundLoopTimer = null;
       }
     }
   } else {
     stopTitleFlashing();
+    isTemporaryMuted = false;
     if (soundLoopTimer) {
       clearInterval(soundLoopTimer);
       soundLoopTimer = null;
@@ -3553,6 +3873,77 @@ function syncChartPulse() {
   }
 }
 
+/* ================= 5维预警触发条件实时核验 (支持全局与个股开关) ================= */
+function checkAlertConditions(item, q, history) {
+  if (!item || !q || q.price <= 0) return null;
+  const cfg = globalAlertSettings;
+
+  // 1. 突破上限 (止盈目标)
+  if (cfg.upper && item.upperTarget != null && q.price >= item.upperTarget) {
+    const diff = q.price - item.upperTarget;
+    return {
+      hit: true,
+      reason: 'upper',
+      level: 'warn',
+      detail: '现价 ' + fmt(q.price, q.decimals) + ' ≥ 上限 ' + fmt(item.upperTarget, q.decimals) + ' (+' + fmt(diff, q.decimals) + ')'
+    };
+  }
+
+  // 2. 跌破下限 (止损目标)
+  if (cfg.lower && item.lowerTarget != null && q.price <= item.lowerTarget) {
+    const diff = q.price - item.lowerTarget;
+    return {
+      hit: true,
+      reason: 'lower',
+      level: 'danger',
+      detail: '现价 ' + fmt(q.price, q.decimals) + ' ≤ 下限 ' + fmt(item.lowerTarget, q.decimals) + ' (' + fmt(diff, q.decimals) + ')'
+    };
+  }
+
+  // 3. 智能防线：跌破分时均价线 (VWAP -0.8%)
+  const smart = item.smartAlerts || { vwap: true, rapidDrop: true, volSpike: true };
+  if (cfg.vwap && smart.vwap && q.vwap > 0 && q.price < q.vwap) {
+    const vwapDropPct = ((q.vwap - q.price) / q.vwap) * 100;
+    if (vwapDropPct >= 0.8) {
+      return {
+        hit: true,
+        reason: 'vwap_break',
+        level: 'danger',
+        detail: '跌破分时均价线 -' + vwapDropPct.toFixed(2) + '% (均价 ' + fmt(q.vwap, q.decimals) + ')'
+      };
+    }
+  }
+
+  // 4. 智能防线：3分钟急速跳水 (-2.0%)
+  if (cfg.rapidDrop && smart.rapidDrop && history && history.length >= 2) {
+    let maxP = 0;
+    for (let i = 0; i < history.length; i++) {
+      if (history[i].price > maxP) maxP = history[i].price;
+    }
+    if (maxP > 0 && (maxP - q.price) / maxP >= 0.02) {
+      const dropPct = ((maxP - q.price) / maxP) * 100;
+      return {
+        hit: true,
+        reason: 'rapid_drop',
+        level: 'danger',
+        detail: '3分钟急速跳水 -' + dropPct.toFixed(2) + '% (高点 ' + fmt(maxP, q.decimals) + ')'
+      };
+    }
+  }
+
+  // 5. 智能防线：量比异常突变 (≥ 3.0x)
+  if (cfg.volSpike && smart.volSpike && q.volumeRatio >= 3.0) {
+    return {
+      hit: true,
+      reason: 'vol_spike',
+      level: 'info',
+      detail: '盘中量比暴增至 ' + q.volumeRatio.toFixed(2) + 'x (主力突发放量)'
+    };
+  }
+
+  return null;
+}
+
 /* ================= 轮询与核心提醒触发 ================= */
 async function pollCycle() {
   if (isPollingInFlight) return;
@@ -3601,41 +3992,69 @@ async function pollCycle() {
   const isDataStale = lastSuccessTimestamp > 0 && (Date.now() - lastSuccessTimestamp > STALE_THRESHOLD_MS);
 
   let newlyTriggeredCount = 0;
+  let recoveredCount = 0;
 
-  // 仅在数据有效新鲜且未过期时执行到价判定，避免因陈旧数据误触发或漏报
+  // 仅在数据有效新鲜且未过期时执行到价判定与自愈核验，避免因陈旧数据误触发或漏报
   if (!isDataStale) {
     monitors.forEach(item => {
       const q = quotes[item.code];
       if (!q) return;
-      if (item.status === 'watching') {
-        let hit = false;
-        let reason = null;
-        if (item.upperTarget != null && q.price > 0 && q.price >= item.upperTarget) {
-          hit = true;
-          reason = 'upper';
-        } else if (item.lowerTarget != null && q.price > 0 && q.price <= item.lowerTarget) {
-          hit = true;
-          reason = 'lower';
+
+      // 记录滑动历史用于急跌计算（保留3.5分钟）
+      const nowTs = Date.now();
+      if (!recentPriceHistory[item.code]) recentPriceHistory[item.code] = [];
+      const history = recentPriceHistory[item.code];
+      if (q.price > 0) {
+        history.push({ time: nowTs, price: q.price });
+        while (history.length > 0 && nowTs - history[0].time > 210000) {
+          history.shift();
         }
-        if (hit) {
+      }
+
+      if (item.status === 'paused') {
+        // 维持暂停，不参与预警检测
+        return;
+      }
+
+      const alertCheck = checkAlertConditions(item, q, history);
+
+      if (item.status === 'watching') {
+        if (alertCheck) {
           item.status = 'triggered';
-          item.triggeredReason = reason;
+          item.triggeredReason = alertCheck.reason;
+          item.triggeredLevel = alertCheck.level;
+          item.triggeredDetail = alertCheck.detail;
+          item.triggeredTime = new Date().toLocaleTimeString('zh-CN', { hour12: false });
           newlyTriggeredCount++;
+          isTemporaryMuted = false;
           if ('Notification' in window && Notification.permission === 'granted') {
             try {
-              const dirDesc = reason === 'upper' ? ('突破上限 ≥ ' + item.upperTarget) : ('跌破下限 ≤ ' + item.lowerTarget);
-              new Notification('股价到价警报 · ' + q.name, {
-                body: q.name + ' 现价 ' + fmt(q.price, q.decimals) + '，已满足条件（' + dirDesc + '）'
+              new Notification('股价预警 · ' + q.name, {
+                body: q.name + ' ' + alertCheck.detail
               });
             } catch (e) {}
           }
         }
+      } else if (item.status === 'triggered') {
+        // 方案 B：浮动自愈恢复制（数据回归正常区间自然解除报警）
+        if (!alertCheck) {
+          item.status = 'watching';
+          item.triggeredReason = null;
+          item.triggeredLevel = null;
+          item.triggeredDetail = null;
+          item.triggeredTime = null;
+          recoveredCount++;
+        } else {
+          // 仍在警报区间内，平滑更新最新点位与差值
+          item.triggeredReason = alertCheck.reason;
+          item.triggeredLevel = alertCheck.level;
+          item.triggeredDetail = alertCheck.detail;
+        }
       }
     });
 
-    if (newlyTriggeredCount > 0) {
+    if (newlyTriggeredCount > 0 || recoveredCount > 0) {
       saveMonitors();
-      playAlarmSound();
     }
   }
 
@@ -5250,14 +5669,60 @@ const AnomalyRadarEngine = (function() {
     }
   }
 
-  function update() {
-    if (!els.globalPulseHud) return;
-    if (!monitors.length) {
-      activeAlerts = [];
-      els.globalPulseHud.style.display = 'none';
-      stopTimer();
-      return;
+  function renderAlertingHud(triggeredItems) {
+    els.globalPulseHud.classList.add('is-alerting');
+    const hasDanger = triggeredItems.some(m => m.triggeredLevel === 'danger' || m.triggeredReason === 'lower' || m.triggeredReason === 'vwap_break' || m.triggeredReason === 'rapid_drop');
+    if (hasDanger) {
+      els.globalPulseHud.classList.remove('warn-only');
+    } else {
+      els.globalPulseHud.classList.add('warn-only');
     }
+
+    if (els.sonarBadge) els.sonarBadge.textContent = '🚨 声呐告警';
+    if (els.gphCountPill) {
+      els.gphCountPill.textContent = triggeredItems.length + '项告警';
+      els.gphCountPill.className = 'gph-count-pill alerting';
+    }
+
+    // 报警状态隐藏常规翻页控件
+    if (els.gphControls) els.gphControls.style.display = 'none';
+
+    // 呈现声呐处置静音按钮
+    if (els.sonarMuteBtn) {
+      els.sonarMuteBtn.style.display = 'inline-flex';
+      if (isTemporaryMuted) {
+        els.sonarMuteBtn.classList.add('active');
+        els.sonarMuteBtn.textContent = '🔔 已静音';
+        els.sonarMuteBtn.title = '当前警报音效已单次静音，点击恢复声音';
+      } else {
+        els.sonarMuteBtn.classList.remove('active');
+        els.sonarMuteBtn.textContent = '🔕 静音';
+        els.sonarMuteBtn.title = '保持高亮，单次静音当前警报音效';
+      }
+    }
+
+    // 渲染多标的告警磁贴胶囊流 (横向排布，点击直达分时走势与量化罗盘)
+    const cardsHtml = triggeredItems.map(item => {
+      const q = quotes[item.code];
+      const stockName = q ? q.name : item.code;
+      const trigLevel = item.triggeredLevel || (item.triggeredReason === 'upper' ? 'warn' : 'danger');
+      const reasonLabel = getAlertReasonLabel(item);
+      const detail = item.triggeredDetail || (q ? ('现价 ' + fmt(q.price, q.decimals)) : '触及预警');
+      return '<div class="sonar-alert-card ' + trigLevel + '" onclick="focusStockChartAndQuant(\'' + item.code + '\')" title="点击定位并查看 ' + stockName + ' 走势图与量化罗盘">' +
+        '<span class="sonar-card-badge">' + reasonLabel + '</span>' +
+        '<span class="sonar-card-name">' + stockName + '</span>' +
+        '<span class="sonar-card-detail num">' + detail + '</span>' +
+      '</div>';
+    }).join('');
+
+    els.gphStream.innerHTML = '<div style="display: flex; align-items: center; gap: 8px; overflow-x: auto; width: 100%; padding: 2px 0;">' + cardsHtml + '</div>';
+  }
+
+  function renderNormalHud() {
+    els.globalPulseHud.classList.remove('is-alerting');
+    els.globalPulseHud.classList.remove('warn-only');
+    if (els.sonarBadge) els.sonarBadge.textContent = '📡 盘口声呐';
+    if (els.sonarMuteBtn) els.sonarMuteBtn.style.display = 'none';
 
     const all = [];
     monitors.forEach(item => {
@@ -5281,6 +5746,29 @@ const AnomalyRadarEngine = (function() {
     } else if (activeAlerts.length <= 1) {
       stopTimer();
     }
+  }
+
+  function update() {
+    if (!els.globalPulseHud) return;
+    if (!monitors.length) {
+      activeAlerts = [];
+      els.globalPulseHud.style.display = 'none';
+      stopTimer();
+      return;
+    }
+
+    els.globalPulseHud.style.display = 'flex';
+
+    // 1. 优先排查系统级到价/破位警报 (triggered 状态)
+    const triggeredItems = monitors.filter(m => m.status === 'triggered');
+    if (triggeredItems.length > 0) {
+      stopTimer(); // 报警状态停止常规异动轮播，固定呈现多标的告警磁贴流
+      renderAlertingHud(triggeredItems);
+      return;
+    }
+
+    // 2. 常态/微观异动模式 (无 triggered 警报时)
+    renderNormalHud();
   }
 
   function prev() {
@@ -5312,6 +5800,13 @@ const AnomalyRadarEngine = (function() {
       els.gphNextBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         next();
+      });
+    }
+    if (els.sonarMuteBtn) {
+      els.sonarMuteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        isTemporaryMuted = !isTemporaryMuted;
+        syncSoundAlarm();
       });
     }
   }
@@ -6441,9 +6936,11 @@ function renderTable() {
     const q = quotes[item.code];
     const isSelected = item.id === selectedId;
     const isTriggered = item.status === 'triggered';
+    const trigLevel = item.triggeredLevel || (item.triggeredReason === 'upper' ? 'warn' : 'danger');
+    const trigClass = isTriggered ? ('row-triggered row-triggered-' + trigLevel) : '';
     const rowClass = [
       isSelected ? 'selected' : '',
-      isTriggered ? 'row-triggered' : '',
+      trigClass,
       isDataStale ? 'row-stale' : ''
     ].filter(Boolean).join(' ');
 
@@ -6504,7 +7001,14 @@ function renderTable() {
       }
       targetLowerHtml = '<div class="target-item-line"><span class="target-lbl">≤ ' + fmt(item.lowerTarget, decimals) + '</span><span class="target-diff-num ' + diffClass + '" title="距下限差值">' + diffStr + '</span></div>';
     }
-    const targetBlockHtml = (targetUpperHtml || targetLowerHtml) ? (targetUpperHtml + targetLowerHtml) : '<div class="target-none">未设目标</div>';
+
+    let smartLines = '';
+    const cfg = globalAlertSettings;
+    const smart = item.smartAlerts || { vwap: true, rapidDrop: true, volSpike: true };
+    if (cfg.vwap && smart.vwap) smartLines += '<div class="target-item-line" style="font-size:10.5px; opacity:0.8;"><span class="target-lbl">均价线:</span><span class="target-diff-num diff-safe">VWAP-0.8%</span></div>';
+    if (cfg.rapidDrop && smart.rapidDrop) smartLines += '<div class="target-item-line" style="font-size:10.5px; opacity:0.8;"><span class="target-lbl">急跌线:</span><span class="target-diff-num diff-safe">3分-2%</span></div>';
+    if (cfg.volSpike && smart.volSpike) smartLines += '<div class="target-item-line" style="font-size:10.5px; opacity:0.8;"><span class="target-lbl">放量线:</span><span class="target-diff-num diff-safe">量比≥3x</span></div>';
+    const targetBlockHtml = (targetUpperHtml || targetLowerHtml) ? (targetUpperHtml + targetLowerHtml + smartLines) : (smartLines || '<div class="target-none">未设目标</div>');
 
     // 量能与形态分析
     const volSummary = (typeof VolumeCycleEngine !== 'undefined') ? VolumeCycleEngine.getMonitorVolumeSummary(item.code, q) : null;
@@ -6518,12 +7022,17 @@ function renderTable() {
     // 监控状态徽标
     let statusBadge = '';
     if (item.status === 'triggered') {
-      const reasonText = item.triggeredReason === 'upper' ? '突破上限' : (item.triggeredReason === 'lower' ? '跌破下限' : '到价触发');
-      statusBadge = '<span class="badge badge-triggered" title="标的已触及目标价并报警">⚠ ' + reasonText + '</span>';
+      const reasonLabel = getAlertReasonLabel(item);
+      statusBadge = '<span class="badge badge-triggered badge-' + trigLevel + '" title="' + (item.triggeredDetail || '标的已触及预警条件并报警') + '">⚠ ' + reasonLabel + '</span>';
     } else if (item.status === 'watching') {
       statusBadge = '<span class="badge badge-watching"><span class="badge-dot-live"></span>监控中</span>';
     } else {
       statusBadge = '<span class="badge badge-paused">已暂停</span>';
+    }
+
+    let causePillHtml = '';
+    if (isTriggered) {
+      causePillHtml = '<span class="row-cause-pill cause-' + trigLevel + '" title="' + (item.triggeredDetail || '') + '">' + getAlertReasonLabel(item) + '</span>';
     }
 
     const catBadgeHtml = NewsCatalystEngine.renderRowBadge(item.code);
@@ -6552,6 +7061,7 @@ function renderTable() {
       '<td class="col-asset">' +
         '<div class="asset-primary">' +
           '<span class="asset-name">' + (q ? q.name : item.code) + '</span>' +
+          causePillHtml +
           catBadgeHtml +
           radarHtml +
         '</div>' +
@@ -6599,11 +7109,6 @@ function addMonitor() {
     toast('仅支持 A股（如 600519）与港股（如 00700）代码');
     return;
   }
-  if (upperVal == null && lowerVal == null) {
-    toast('上限与下限目标至少需输入一项');
-    els.upperInput.focus();
-    return;
-  }
   if (upperVal != null && (isNaN(upperVal) || upperVal <= 0)) {
     toast('请输入有效的上限目标价格');
     els.upperInput.focus();
@@ -6631,7 +7136,11 @@ function addMonitor() {
     upperTarget: upperVal,
     lowerTarget: lowerVal,
     status: 'watching',
-    triggeredReason: null
+    triggeredReason: null,
+    triggeredDetail: null,
+    triggeredLevel: null,
+    triggeredTime: null,
+    smartAlerts: { vwap: true, rapidDrop: true, volSpike: true }
   };
 
   monitors.unshift(newItem);
@@ -6655,11 +7164,15 @@ function addMonitor() {
   QuantCompassEngine.fetchDayK(code);
 }
 
+
 function stopAlarmItem(id) {
   const it = monitors.find(m => m.id === id);
   if (!it) return;
   it.status = 'paused';
   it.triggeredReason = null;
+  it.triggeredDetail = null;
+  it.triggeredLevel = null;
+  it.triggeredTime = null;
   saveMonitors();
   syncSoundAlarm();
   updateGlobalStatus();
@@ -6672,6 +7185,9 @@ function pauseItem(id) {
   if (!it) return;
   it.status = 'paused';
   it.triggeredReason = null;
+  it.triggeredDetail = null;
+  it.triggeredLevel = null;
+  it.triggeredTime = null;
   saveMonitors();
   syncSoundAlarm();
   updateGlobalStatus();
@@ -6684,6 +7200,9 @@ function resumeItem(id) {
   if (!it) return;
   it.status = 'watching';
   it.triggeredReason = null;
+  it.triggeredDetail = null;
+  it.triggeredLevel = null;
+  it.triggeredTime = null;
   saveMonitors();
   syncSoundAlarm();
   updateGlobalStatus();
@@ -6730,6 +7249,11 @@ function openEditModal(id) {
   els.editUpperInput.value = it.upperTarget != null ? it.upperTarget : '';
   els.editLowerInput.value = it.lowerTarget != null ? it.lowerTarget : '';
 
+  if (!it.smartAlerts) it.smartAlerts = { vwap: true, rapidDrop: true, volSpike: true };
+  if (els.editVwapCheck) els.editVwapCheck.checked = Boolean(it.smartAlerts.vwap);
+  if (els.editRapidDropCheck) els.editRapidDropCheck.checked = Boolean(it.smartAlerts.rapidDrop);
+  if (els.editVolSpikeCheck) els.editVolSpikeCheck.checked = Boolean(it.smartAlerts.volSpike);
+
   if (q && q.price > 0) {
     const p3 = fmt(q.price * 1.03, q.decimals);
     const m3 = fmt(q.price * 0.97, q.decimals);
@@ -6762,8 +7286,15 @@ function saveEditModal() {
   const upperVal = upperRaw ? parseFloat(upperRaw) : null;
   const lowerVal = lowerRaw ? parseFloat(lowerRaw) : null;
 
-  if (upperVal == null && lowerVal == null) {
-    toast('上限与下限目标至少需输入一项');
+  if (!it.smartAlerts) it.smartAlerts = {};
+  it.smartAlerts.vwap = els.editVwapCheck ? els.editVwapCheck.checked : false;
+  it.smartAlerts.rapidDrop = els.editRapidDropCheck ? els.editRapidDropCheck.checked : false;
+  it.smartAlerts.volSpike = els.editVolSpikeCheck ? els.editVolSpikeCheck.checked : false;
+
+  const hasSmart = it.smartAlerts.vwap || it.smartAlerts.rapidDrop || it.smartAlerts.volSpike;
+
+  if (upperVal == null && lowerVal == null && !hasSmart) {
+    toast('目标价格或智能防线至少需配置一项');
     return;
   }
   if (upperVal != null && (isNaN(upperVal) || upperVal <= 0)) {
@@ -6783,6 +7314,9 @@ function saveEditModal() {
   it.lowerTarget = lowerVal;
   it.status = 'watching';
   it.triggeredReason = null;
+  it.triggeredDetail = null;
+  it.triggeredLevel = null;
+  it.triggeredTime = null;
   saveMonitors();
   closeEditModal();
   syncSoundAlarm();
@@ -6806,6 +7340,7 @@ function exportConfig() {
     currentSoundType: currentSoundType,
     currentVolume: currentVolume,
     smartThrottleEnabled: smartThrottleEnabled,
+    alertSettings: globalAlertSettings,
     monitors: monitors
   };
   const jsonStr = JSON.stringify(data, null, 2);
@@ -6866,6 +7401,17 @@ function importConfig(file) {
         smartThrottleEnabled = !!obj.smartThrottleEnabled;
         saveThrottleSettings();
         if (els.throttleToggle) els.throttleToggle.checked = smartThrottleEnabled;
+      }
+      if (obj.alertSettings && typeof obj.alertSettings === 'object') {
+        globalAlertSettings = {
+          upper: obj.alertSettings.upper !== false,
+          lower: obj.alertSettings.lower !== false,
+          vwap: obj.alertSettings.vwap !== false,
+          rapidDrop: obj.alertSettings.rapidDrop !== false,
+          volSpike: obj.alertSettings.volSpike !== false
+        };
+        saveAlertSettings();
+        syncAlertSettingsUI();
       }
       saveMonitors();
       if (monitors.length > 0 && (!selectedId || !monitors.some(m => m.id === selectedId))) {
@@ -7207,6 +7753,67 @@ function loadThrottleSettings() {
       if (els.throttleToggle) els.throttleToggle.checked = smartThrottleEnabled;
     }
   } catch (e) {}
+}
+
+function saveAlertSettings() {
+  try {
+    localStorage.setItem(ALERT_SETTINGS_KEY, JSON.stringify(globalAlertSettings));
+  } catch (e) {}
+}
+
+function loadAlertSettings() {
+  try {
+    const raw = localStorage.getItem(ALERT_SETTINGS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      globalAlertSettings = {
+        upper: parsed.upper !== false,
+        lower: parsed.lower !== false,
+        vwap: parsed.vwap !== false,
+        rapidDrop: parsed.rapidDrop !== false,
+        volSpike: parsed.volSpike !== false
+      };
+    }
+  } catch (e) {}
+  syncAlertSettingsUI();
+}
+
+function syncAlertSettingsUI() {
+  if (els.cfgAlertUpper) els.cfgAlertUpper.checked = Boolean(globalAlertSettings.upper);
+  if (els.cfgAlertLower) els.cfgAlertLower.checked = Boolean(globalAlertSettings.lower);
+  if (els.cfgAlertVwap) els.cfgAlertVwap.checked = Boolean(globalAlertSettings.vwap);
+  if (els.cfgAlertRapidDrop) els.cfgAlertRapidDrop.checked = Boolean(globalAlertSettings.rapidDrop);
+  if (els.cfgAlertVolSpike) els.cfgAlertVolSpike.checked = Boolean(globalAlertSettings.volSpike);
+}
+
+function applyAlertSettingsChange() {
+  saveAlertSettings();
+  let recoveredCount = 0;
+  monitors.forEach(item => {
+    if (item.status === 'triggered') {
+      const q = quotes[item.code];
+      const history = recentPriceHistory[item.code] || [];
+      const check = checkAlertConditions(item, q, history);
+      if (!check) {
+        item.status = 'watching';
+        item.triggeredReason = null;
+        item.triggeredLevel = null;
+        item.triggeredDetail = null;
+        item.triggeredTime = null;
+        recoveredCount++;
+      } else {
+        item.triggeredReason = check.reason;
+        item.triggeredLevel = check.level;
+        item.triggeredDetail = check.detail;
+      }
+    }
+  });
+
+  if (recoveredCount > 0) {
+    saveMonitors();
+    renderTable();
+    syncSoundAlarm();
+  }
 }
 
 function checkMarketAwake() {
@@ -7563,6 +8170,43 @@ els.throttleToggle.addEventListener('change', () => {
   toast('已' + (smartThrottleEnabled ? '开启' : '关闭') + '休市智能节流');
 });
 
+/* 5维预警开关切换事件 */
+if (els.cfgAlertUpper) {
+  els.cfgAlertUpper.addEventListener('change', () => {
+    globalAlertSettings.upper = els.cfgAlertUpper.checked;
+    applyAlertSettingsChange();
+    toast('已' + (globalAlertSettings.upper ? '启用' : '取消') + '【突破上限】预警');
+  });
+}
+if (els.cfgAlertLower) {
+  els.cfgAlertLower.addEventListener('change', () => {
+    globalAlertSettings.lower = els.cfgAlertLower.checked;
+    applyAlertSettingsChange();
+    toast('已' + (globalAlertSettings.lower ? '启用' : '取消') + '【跌破下限】预警');
+  });
+}
+if (els.cfgAlertVwap) {
+  els.cfgAlertVwap.addEventListener('change', () => {
+    globalAlertSettings.vwap = els.cfgAlertVwap.checked;
+    applyAlertSettingsChange();
+    toast('已' + (globalAlertSettings.vwap ? '启用' : '取消') + '【均价破位】预警');
+  });
+}
+if (els.cfgAlertRapidDrop) {
+  els.cfgAlertRapidDrop.addEventListener('change', () => {
+    globalAlertSettings.rapidDrop = els.cfgAlertRapidDrop.checked;
+    applyAlertSettingsChange();
+    toast('已' + (globalAlertSettings.rapidDrop ? '启用' : '取消') + '【急速跳水】预警');
+  });
+}
+if (els.cfgAlertVolSpike) {
+  els.cfgAlertVolSpike.addEventListener('change', () => {
+    globalAlertSettings.volSpike = els.cfgAlertVolSpike.checked;
+    applyAlertSettingsChange();
+    toast('已' + (globalAlertSettings.volSpike ? '启用' : '取消') + '【量比突增】预警');
+  });
+}
+
 els.exportBtn.addEventListener('click', exportConfig);
 els.importBtn.addEventListener('click', () => {
   els.importFileInput.value = '';
@@ -7863,6 +8507,7 @@ NewsCatalystEngine.subscribe((code, result) => {
   loadInterval();
   loadSoundSettings();
   loadThrottleSettings();
+  loadAlertSettings();
   loadMonitors();
   if (monitors.length > 0) {
     selectedId = monitors[0].id;
