@@ -1603,6 +1603,77 @@
   .qp-tick-dir.b { background: rgba(255, 93, 93, 0.18); color: var(--up); }
   .qp-tick-dir.s { background: rgba(23, 201, 143, 0.18); color: var(--down); }
   .qp-tick-dir.m { background: rgba(148, 173, 214, 0.1); color: var(--text-faint); }
+
+  /* ================= 量能周期监控增强样式 ================= */
+  .col-vol {
+    min-width: 110px;
+  }
+  @media (max-width: 980px) {
+    .col-vol {
+      display: none !important;
+    }
+  }
+
+  .vol-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    line-height: 1.4;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .vol-badge-normal {
+    color: var(--text-dim);
+    background: rgba(148, 173, 214, 0.08);
+    border: 1px solid var(--line);
+  }
+  .vol-badge-low {
+    color: var(--text-faint);
+    background: rgba(148, 173, 214, 0.06);
+    border: 1px solid rgba(148, 173, 214, 0.12);
+  }
+  .vol-badge-warm {
+    color: var(--accent);
+    background: rgba(245, 166, 35, 0.12);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+  }
+  .vol-badge-pressure {
+    color: var(--down);
+    background: rgba(23, 201, 143, 0.12);
+    border: 1px solid rgba(23, 201, 143, 0.3);
+  }
+  .vol-badge-attack {
+    color: var(--up);
+    background: rgba(255, 93, 93, 0.14);
+    border: 1px solid rgba(255, 93, 93, 0.3);
+    font-weight: 700;
+  }
+  .vol-badge-dump {
+    color: #fff;
+    background: var(--danger);
+    font-weight: 700;
+  }
+  .vol-badge-surge {
+    color: #ffd166;
+    background: rgba(255, 93, 93, 0.25);
+    border: 1px solid var(--up);
+    font-weight: 700;
+  }
+  .vol-badge-panic {
+    color: #fff;
+    background: #b91c1c;
+    animation: pill-pulse 1s infinite alternate;
+    font-weight: 700;
+  }
+
+  .chart-tab-btn.active {
+    background: var(--panel) !important;
+    color: var(--accent) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
 </style>
 </head>
 <body>
@@ -1625,6 +1696,55 @@
       <div id="globalPill" class="status-pill on" title="当前实时盯盘运行状态">
         <span class="dot"></span>
         <span id="globalStatusText">监控就绪</span>
+      </div>
+
+      <!-- 大盘流动性水温胶囊与浮层面板 -->
+      <div class="liquidity-wrap" style="position: relative;">
+        <div id="marketLiquidityPill" class="status-pill clickable" title="点击查看大盘宏观流动性水温与30日量能走势">
+          <span class="dot" style="background: var(--accent); box-shadow: 0 0 8px rgba(245,166,35,0.8);"></span>
+          <span id="marketLiquidityText">大盘水温: 探测中</span>
+        </div>
+        <div id="marketLiquidityPopover" class="settings-popover" style="width: 320px;" role="dialog" aria-label="大盘流动性水温面板">
+          <div class="popover-header">
+            <span class="popover-title">大盘宏观流动性周期</span>
+            <button id="liquidityCloseBtn" class="popover-close" aria-label="关闭大盘水温面板" title="关闭">✕</button>
+          </div>
+          <div class="popover-section" style="gap: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span class="popover-section-label">上证指数 (sh000001)</span>
+              <span id="liqClimateBadge" class="qp-badge warn">增量探测中</span>
+            </div>
+            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 2px;">
+              <div>
+                <span style="font-size: 11px; color: var(--text-faint);">今日成交额</span>
+                <div id="liqTodayAmt" class="num" style="font-size: 16px; font-weight: 700; color: var(--text);">--</div>
+              </div>
+              <div style="text-align: right;">
+                <span style="font-size: 11px; color: var(--text-faint);">相对20日均额偏离</span>
+                <div id="liqBiasRatio" class="num" style="font-size: 15px; font-weight: 700; color: var(--accent);">--</div>
+              </div>
+            </div>
+            <div style="margin-top: 6px;">
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-faint); margin-bottom: 3px;">
+                <span>30日流动性分位</span>
+                <span id="liqPercentileVal" class="num" style="color: var(--text-dim);">--%</span>
+              </div>
+              <div style="height: 5px; background: rgba(148,173,214,0.1); border-radius: 3px; overflow: hidden;">
+                <div id="liqPercentileBar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #38bdf8, #f5a623); border-radius: 3px; transition: width 0.4s ease;"></div>
+              </div>
+            </div>
+            <div style="margin-top: 10px;">
+              <div style="font-size: 11px; color: var(--text-faint); margin-bottom: 4px; display: flex; justify-content: space-between;">
+                <span>近30交易日成交量走势 (含20日均量线)</span>
+                <span id="liqSparkDate" class="num" style="font-size: 10px; color: var(--text-faint);">--</span>
+              </div>
+              <canvas id="marketSparklineCanvas" width="288" height="64" style="width: 100%; height: 64px; background: rgba(148,173,214,0.04); border: 1px solid var(--line); border-radius: 6px; display: block;"></canvas>
+            </div>
+            <div id="liqDiagnosisNote" style="font-size: 11px; color: var(--text-dim); background: rgba(245,166,35,0.06); border: 1px solid rgba(245,166,35,0.15); border-radius: 6px; padding: 6px 8px; line-height: 1.4; margin-top: 4px;">
+              正在分析近30交易日大盘量能中枢...
+            </div>
+          </div>
+        </div>
       </div>
       <div class="settings-wrap">
         <button id="settingsToggleBtn" class="btn btn-ghost btn-sm settings-trigger" aria-label="打开设置" title="偏好与数据设置">
@@ -1772,6 +1892,7 @@
             <th>目标条件</th>
             <th>距目标差值</th>
             <th>成交额</th>
+            <th class="col-vol">20日量比 · 状态</th>
             <th>状态</th>
             <th style="text-align: right; padding-right: 18px;">操作</th>
           </tr>
@@ -1800,7 +1921,43 @@
         <span class="num" id="chartStockCode" style="color: var(--text-faint); font-size: 12px;">—</span>
         <span id="chartTargetLine" style="color: var(--accent); font-size: 12px; margin-left: 6px;">—</span>
       </div>
-      <button id="closeChartBtn" class="btn btn-ghost btn-sm">收起走势图 ✕</button>
+      <div style="display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap;">
+        <div class="chart-tab-group" id="chartSubTabs" style="display: inline-flex; background: var(--panel-2); padding: 2px; border-radius: 7px; border: 1px solid var(--line);">
+          <button id="btnTabMinute" class="chart-tab-btn active" style="border: none; background: var(--panel); color: var(--accent); padding: 3px 10px; font-size: 11px; font-weight: 600; border-radius: 5px; cursor: pointer; transition: all 0.15s;">当日分时</button>
+          <button id="btnTabCycle" class="chart-tab-btn" style="border: none; background: transparent; color: var(--text-dim); padding: 3px 10px; font-size: 11px; font-weight: 500; border-radius: 5px; cursor: pointer; transition: all 0.15s;">30日量价周期</button>
+        </div>
+        <button id="closeChartBtn" class="btn btn-ghost btn-sm">收起走势图 ✕</button>
+      </div>
+    </div>
+    <div id="chartCycleHeader" style="display: none; flex-direction: column; gap: 8px; padding: 10px 14px; margin-bottom: 10px; background: rgba(148,173,214,0.03); border: 1px solid var(--line); border-radius: 8px;">
+      <!-- 第一行：决策结论与实操动作指引 -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span id="chartCycleBadge" class="vol-badge vol-badge-warm" style="font-size: 11px; padding: 2px 8px;">量能解析中</span>
+          <span id="chartCycleActionBadge" class="vol-badge" style="background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.3); font-size: 11px; padding: 2px 8px;">--</span>
+          <span style="color: var(--text-dim); font-size: 11px;" id="chartCycleSummaryText">正在解析30日量价形态...</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 14px; font-size: 11px; color: var(--text-faint); margin-left: auto;">
+          <span title="当前价格相对于20日均价成本的偏离幅度">成本安全边际: <b class="num" id="chartCycleBias" style="color: var(--text);">--%</b></span>
+          <span>实时倍率: <b class="num" id="chartCycleRatio" style="color: var(--accent); font-weight: 700;">--</b></span>
+        </div>
+      </div>
+      <!-- 第二行：极简量能水温计与图表常驻图例 -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 6px; border-top: 1px dashed rgba(148,173,214,0.1);">
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px; max-width: 380px;">
+          <span style="font-size: 10px; color: var(--text-faint); white-space: nowrap;">量能水温:</span>
+          <div style="flex: 1; height: 5px; background: rgba(148,173,214,0.1); border-radius: 3px; overflow: hidden; position: relative;" title="0%地量至100%天量区间">
+            <div id="chartCycleMeterBar" style="height: 100%; width: 50%; background: linear-gradient(90deg, #38bdf8 0%, #f5a623 60%, #ff5d5d 100%); border-radius: 3px; transition: width 0.3s ease;"></div>
+          </div>
+          <span id="chartCycleMeterText" class="num" style="font-size: 10px; color: var(--text-dim); white-space: nowrap;">--% 常态</span>
+        </div>
+        <!-- 图表常驻微图例 -->
+        <div style="display: flex; align-items: center; gap: 12px; font-size: 10px; color: var(--text-faint); margin-left: auto;">
+          <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 2px; background: #ffffff; display: inline-block;"></span> 价格</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 0; border-top: 1.5px dashed #38bdf8; display: inline-block;"></span> 20日均价成本</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;"><span style="width: 10px; height: 2px; background: #f5a623; display: inline-block;"></span> 20日均量中枢</span>
+        </div>
+      </div>
     </div>
     <div id="chartContainer" class="chart-container"></div>
     <div id="chartError" class="chart-error" style="display: none;">分时数据暂不可用</div>
@@ -2763,7 +2920,7 @@ function parseQuote(code, raw) {
     outerVol: outerVol,
     innerVol: innerVol,
     activeBuyRatio: (outerVol + innerVol > 0) ? Math.round((outerVol / (outerVol + innerVol)) * 100) : 50,
-    volumeRatio: +f[49] || 1,
+    volumeRatio: isA ? (+f[49] || 1) : 0,
     turnoverRate: +f[38] || 0,
     vwap: vwap,
     vwapBiasPct: (vwap > 0) ? +(((+f[3] - vwap) / vwap) * 100).toFixed(2) : 0,
@@ -2818,6 +2975,13 @@ async function renderSelectedChart() {
   els.chartCard.classList.add('show');
   renderQuantCompass(item.code);
   loadChartCatalysts(item.code, false);
+
+  if (typeof VolumeCycleEngine !== 'undefined' && VolumeCycleEngine.getActiveTab() === 'dailyCycle') {
+    VolumeCycleEngine.renderDailyCycleChart(item, q);
+    return;
+  }
+  const cycleHeaderEl = document.getElementById('chartCycleHeader');
+  if (cycleHeaderEl) cycleHeaderEl.style.display = 'none';
 
   try {
     const fetchOptions = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
@@ -2935,6 +3099,7 @@ async function renderSelectedChart() {
  * 分时图秒级脉搏同步（轻量内存直驱，无需重复发起网络请求）
  */
 function syncChartPulse() {
+  if (typeof VolumeCycleEngine !== 'undefined' && VolumeCycleEngine.getActiveTab() === 'dailyCycle') return;
   if (isChartCollapsed || !selectedId || !chartInstance || !currentChartRows || !currentChartRows.length) return;
   const item = monitors.find(m => m.id === selectedId);
   if (!item || item.code !== currentChartCode) {
@@ -4591,6 +4756,819 @@ function updateCatalystTabCounts(items) {
   if (elReport) elReport.textContent = cReport;
 }
 
+/* ================= 量能周期引擎 (Volume Cycle Engine) ================= */
+const VolumeCycleEngine = (function() {
+  const cache = {};
+  let activeChartTab = 'minute';
+  let marketLiquidityData = null;
+  let isFetchingMarket = false;
+
+  function evaluateVolumeState(volRatio, changePct) {
+    if (volRatio == null || isNaN(volRatio) || volRatio <= 0) {
+      return {
+        label: '量能中性',
+        badgeClass: 'vol-badge-normal',
+        color: 'var(--text-dim)',
+        desc: '量能平稳，处于常态运行区间'
+      };
+    }
+    const isUp = changePct > 0;
+    const isDown = changePct < 0;
+
+    if (volRatio < 0.5) {
+      return {
+        label: '地量收敛',
+        badgeClass: 'vol-badge-low',
+        color: 'var(--text-faint)',
+        desc: '单日成交萎缩至20日均量50%以下，抛压衰竭，酝酿周期拐点'
+      };
+    }
+    if (volRatio < 1.0) {
+      return {
+        label: '缩量整理',
+        badgeClass: 'vol-badge-low',
+        color: 'var(--text-dim)',
+        desc: '低于20日均量中枢，存量资金观望，区间震荡蓄势'
+      };
+    }
+    if (volRatio < 1.5) {
+      if (isUp) {
+        return {
+          label: '温和放量',
+          badgeClass: 'vol-badge-warm',
+          color: 'var(--accent)',
+          desc: '量能适度放大伴随价格上行，健康推进态势'
+        };
+      } else if (isDown) {
+        return {
+          label: '放量承压',
+          badgeClass: 'vol-badge-pressure',
+          color: 'var(--down)',
+          desc: '放量下行，局部抛压增大，注意关键支撑有效性'
+        };
+      } else {
+        return {
+          label: '温和放量',
+          badgeClass: 'vol-badge-warm',
+          color: 'var(--accent)',
+          desc: '成交量超越均量，多空博弈升温'
+        };
+      }
+    }
+    if (volRatio <= 2.5) {
+      if (isUp) {
+        return {
+          label: '放量进攻',
+          badgeClass: 'vol-badge-attack',
+          color: 'var(--up)',
+          desc: '突破20日均量1.5倍以上，主力资金坚决做多，右侧确认信号'
+        };
+      } else if (isDown) {
+        return {
+          label: '放量杀跌',
+          badgeClass: 'vol-badge-dump',
+          color: 'var(--danger)',
+          desc: '放量破位下行，抛压沉重，建议严控仓位避险'
+        };
+      } else {
+        return {
+          label: '放量博弈',
+          badgeClass: 'vol-badge-warm',
+          color: 'var(--accent)',
+          desc: '爆出显著量能，多空高位激烈对决'
+        };
+      }
+    }
+    if (isUp) {
+      return {
+        label: '爆量拉升',
+        badgeClass: 'vol-badge-surge',
+        color: '#ffd166',
+        desc: '成交量达20日均量2.5倍以上，情绪高度亢奋，注意冲高回落'
+      };
+    } else {
+      return {
+        label: '恐慌出逃',
+        badgeClass: 'vol-badge-panic',
+        color: '#ff4757',
+        desc: '巨量砸盘出逃，筹码结构受损，切勿盲目抄底'
+      };
+    }
+  }
+
+  async function fetchDailyKline(code, days = 35) {
+    const todayStr = getBeijingDate().toISOString().slice(0, 10);
+    const storageKey = 'ding_kline_' + code + '_' + todayStr;
+
+    if (cache[code] && cache[code].date === todayStr && cache[code].kline && cache[code].kline.length >= 10) {
+      return cache[code];
+    }
+
+    try {
+      const localStr = localStorage.getItem(storageKey);
+      if (localStr) {
+        const parsed = JSON.parse(localStr);
+        if (parsed && Array.isArray(parsed.kline) && parsed.kline.length >= 10) {
+          cache[code] = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {}
+
+    try {
+      const fetchOptions = typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+        ? { signal: AbortSignal.timeout(6000) }
+        : {};
+      const url = 'https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param=' + code + ',day,,,' + days + ',qfq&_=' + Date.now();
+      const r = await fetch(url, fetchOptions);
+      const json = await r.json();
+      const node = json && json.data && json.data[code];
+      if (!node) return null;
+
+      const rawDays = node.qfqday || node.day || [];
+      if (!Array.isArray(rawDays) || !rawDays.length) return null;
+
+      const kline = rawDays.map(row => {
+        return {
+          date: row[0],
+          open: parseFloat(row[1]) || 0,
+          close: parseFloat(row[2]) || 0,
+          high: parseFloat(row[3]) || 0,
+          low: parseFloat(row[4]) || 0,
+          vol: parseFloat(row[5]) || 0
+        };
+      });
+
+      const slice20 = kline.slice(-20);
+      const sumVol20 = slice20.reduce((acc, cur) => acc + cur.vol, 0);
+      const sumPrice20 = slice20.reduce((acc, cur) => acc + cur.close, 0);
+      const ma20Vol = slice20.length ? (sumVol20 / slice20.length) : 0;
+      const ma20Price = slice20.length ? (sumPrice20 / slice20.length) : 0;
+
+      const slice30 = kline.slice(-30);
+      const lastItem = kline[kline.length - 1];
+      const lastVol = lastItem ? lastItem.vol : 0;
+      let countBelow = 0;
+      slice30.forEach(it => {
+        if (it.vol <= lastVol) countBelow++;
+      });
+      const percentile = slice30.length ? Math.round((countBelow / slice30.length) * 100) : 50;
+
+      const result = {
+        code: code,
+        date: todayStr,
+        kline: kline,
+        ma20Vol: ma20Vol,
+        ma20Price: ma20Price,
+        lastVol: lastVol,
+        lastClose: lastItem ? lastItem.close : 0,
+        percentile: percentile,
+        ts: Date.now()
+      };
+
+      cache[code] = result;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(result));
+      } catch (e) {}
+
+      return result;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function drawMarketSparkline(kline, ma20Vol) {
+    const canvas = document.getElementById('marketSparklineCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    if (!kline || !kline.length) return;
+    const data = kline.slice(-30);
+    const vols = data.map(d => d.vol);
+    const maxVol = Math.max(...vols, (ma20Vol || 1) * 1.3) * 1.05;
+
+    const padTop = 6;
+    const padBottom = 6;
+    const padLeft = 4;
+    const padRight = 4;
+    const chartW = w - padLeft - padRight;
+    const chartH = h - padTop - padBottom;
+
+    const barWidth = Math.max(2, (chartW / data.length) * 0.65);
+    data.forEach((d, i) => {
+      const x = padLeft + i * (chartW / data.length) + (chartW / data.length - barWidth) / 2;
+      const barH = (d.vol / maxVol) * chartH;
+      const y = h - padBottom - barH;
+      const isUp = d.close >= d.open;
+      ctx.fillStyle = isUp ? 'rgba(255, 93, 93, 0.45)' : 'rgba(23, 201, 143, 0.45)';
+      ctx.fillRect(x, y, barWidth, barH);
+    });
+
+    if (ma20Vol > 0) {
+      const maY = h - padBottom - (ma20Vol / maxVol) * chartH;
+      ctx.beginPath();
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = 'rgba(245, 166, 35, 0.75)';
+      ctx.lineWidth = 1;
+      ctx.moveTo(padLeft, maY);
+      ctx.lineTo(w - padRight, maY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = 'rgba(245, 166, 35, 0.9)';
+      ctx.font = '9px Consolas, monospace';
+      ctx.fillText('MA20', w - padRight - 28, Math.max(10, maY - 2));
+    }
+  }
+
+  async function updateMarketLiquidity() {
+    if (isFetchingMarket) return;
+    isFetchingMarket = true;
+    try {
+      try {
+        const qRes = await fetchBatchQuotes(['sh000001']);
+        if (qRes && qRes['sh000001']) {
+          quotes['sh000001'] = qRes['sh000001'];
+        }
+      } catch (e) {}
+
+      const sseData = await fetchDailyKline('sh000001', 35);
+      if (!sseData || !sseData.kline || sseData.kline.length < 5) return;
+
+      const q = quotes['sh000001'];
+      let todayVol = (q && q.vol > 0) ? q.vol : sseData.lastVol;
+      let todayAmt = (q && q.amt > 0) ? q.amt : 0;
+
+      const ma20Vol = sseData.ma20Vol || 1;
+      const volRatio = todayVol / ma20Vol;
+      const biasPct = ((volRatio - 1) * 100);
+
+      let climate = '存量轮动';
+      let badgeClass = 'qp-badge warn';
+      let pillText = '存量博弈';
+      let diagnosis = '大盘成交处于20日中枢常态区间，板块轮动加速，严控追高，适合高抛低吸。';
+
+      if (volRatio >= 1.15) {
+        climate = '增量主升';
+        badgeClass = 'qp-badge bull';
+        pillText = '增量博弈';
+        diagnosis = '大盘成交量明显超越20日均量（偏离度 +' + biasPct.toFixed(1) + '%），增量资金入场，市场容错率极高，支持右侧突破。';
+      } else if (volRatio < 0.85) {
+        climate = '缩量退潮';
+        badgeClass = 'qp-badge bear';
+        pillText = '缩量退潮';
+        diagnosis = '大盘成交量较20日均量显著萎缩（偏离度 ' + biasPct.toFixed(1) + '%），资金谨慎观望，赚钱效应收缩，防御为主。';
+      }
+
+      marketLiquidityData = {
+        sseData,
+        volRatio,
+        biasPct,
+        climate,
+        badgeClass,
+        pillText,
+        diagnosis,
+        todayAmt
+      };
+
+      const pillTextEl = document.getElementById('marketLiquidityText');
+      if (pillTextEl) {
+        pillTextEl.textContent = '大盘: ' + pillText + ' (' + (volRatio >= 1 ? '+' : '') + biasPct.toFixed(0) + '%)';
+      }
+
+      const climateBadgeEl = document.getElementById('liqClimateBadge');
+      if (climateBadgeEl) {
+        climateBadgeEl.className = badgeClass;
+        climateBadgeEl.textContent = climate;
+      }
+
+      const todayAmtEl = document.getElementById('liqTodayAmt');
+      if (todayAmtEl) {
+        todayAmtEl.textContent = todayAmt > 0 ? fmtBig(todayAmt) : (fmtBig(sseData.lastVol * 100) + '股');
+      }
+
+      const biasRatioEl = document.getElementById('liqBiasRatio');
+      if (biasRatioEl) {
+        const sign = biasPct > 0 ? '+' : '';
+        biasRatioEl.textContent = sign + biasPct.toFixed(1) + '% (' + volRatio.toFixed(2) + 'x)';
+        biasRatioEl.style.color = volRatio >= 1.15 ? 'var(--up)' : (volRatio < 0.85 ? 'var(--down)' : 'var(--accent)');
+      }
+
+      const percValEl = document.getElementById('liqPercentileVal');
+      const percBarEl = document.getElementById('liqPercentileBar');
+      if (percValEl && percBarEl) {
+        percValEl.textContent = sseData.percentile + '% 分位';
+        percBarEl.style.width = Math.min(100, Math.max(5, sseData.percentile)) + '%';
+        percBarEl.style.background = sseData.percentile >= 70 ? 'var(--up)' : (sseData.percentile <= 30 ? 'var(--down)' : 'var(--accent)');
+      }
+
+      const diagEl = document.getElementById('liqDiagnosisNote');
+      if (diagEl) diagEl.textContent = diagnosis;
+
+      const dateEl = document.getElementById('liqSparkDate');
+      if (dateEl && sseData.kline.length) {
+        dateEl.textContent = sseData.kline[0].date.slice(5) + ' 至 ' + sseData.kline[sseData.kline.length - 1].date.slice(5);
+      }
+
+      drawMarketSparkline(sseData.kline, sseData.ma20Vol);
+    } finally {
+      isFetchingMarket = false;
+    }
+  }
+
+  function getMonitorVolumeSummary(code, q) {
+    const kdata = cache[code];
+    let volRatio = (q && q.volumeRatio > 0) ? q.volumeRatio : 1.0;
+    let changePct = q ? q.changePct : 0;
+
+    if (kdata && kdata.ma20Vol > 0 && q && q.vol > 0) {
+      const trueDailyRatio = q.vol / kdata.ma20Vol;
+      if (trueDailyRatio > 0) {
+        volRatio = (q.volumeRatio > 0) ? q.volumeRatio : trueDailyRatio;
+      }
+    } else if (!kdata) {
+      fetchDailyKline(code, 35).then(res => {
+        if (res && activeChartTab === 'dailyCycle' && currentChartCode === code) {
+          renderDailyCycleChart(monitors.find(m => m.code === code), q);
+        }
+      });
+    }
+
+    const state = evaluateVolumeState(volRatio, changePct);
+    const fillPercent = Math.min(100, Math.max(8, (volRatio / 2.5) * 100));
+
+    const html =
+      '<div style="display: flex; flex-direction: column; gap: 3px; min-width: 105px;">' +
+        '<div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">' +
+          '<span class="num" style="font-size: 12px; font-weight: 700; color: ' + state.color + ';">' + volRatio.toFixed(2) + 'x</span>' +
+          '<span class="vol-badge ' + state.badgeClass + '" title="' + state.desc + '">' + state.label + '</span>' +
+        '</div>' +
+        '<div class="vol-bar-bg" style="width: 100%; height: 3px; background: rgba(148,173,214,0.1); border-radius: 2px; overflow: hidden;" title="量比进度 (基准2.5x满额)">' +
+          '<div style="height: 100%; width: ' + fillPercent + '%; background: ' + state.color + '; border-radius: 2px; transition: width 0.3s ease;"></div>' +
+        '</div>' +
+      '</div>';
+
+    return { volRatio, state, html };
+  }
+
+  async function renderDailyCycleChart(item, q) {
+    if (!item) return;
+    const code = item.code;
+    currentChartCode = code;
+
+    els.chartStockName.textContent = q ? q.name : code;
+    els.chartStockCode.textContent = code;
+    els.chartCard.classList.add('show');
+    els.chartContainer.style.display = 'block';
+    els.chartError.style.display = 'none';
+
+    const cycleHeaderEl = document.getElementById('chartCycleHeader');
+    if (cycleHeaderEl) cycleHeaderEl.style.display = 'flex';
+
+    const echarts = await loadChartLib();
+    if (!chartInstance) chartInstance = echarts.init(els.chartContainer);
+
+    let kdata = cache[code];
+    if (!kdata) {
+      kdata = await fetchDailyKline(code, 35);
+    }
+
+    if (!kdata || !kdata.kline || kdata.kline.length < 5) {
+      els.chartContainer.style.display = 'none';
+      els.chartError.style.display = 'flex';
+      els.chartError.textContent = '暂未获取到 ' + code + ' 的30日日K量能数据';
+      return;
+    }
+
+    const kline = kdata.kline.slice(-30);
+    const dates = kline.map(d => d.date.slice(5));
+    const prices = kline.map(d => d.close);
+    const ma20PriceList = [];
+    const ma20VolList = [];
+
+    for (let i = 0; i < kline.length; i++) {
+      const startIdx = Math.max(0, i - 19);
+      const sub = kline.slice(startIdx, i + 1);
+      const avgP = sub.reduce((acc, c) => acc + c.close, 0) / sub.length;
+      const avgV = sub.reduce((acc, c) => acc + c.vol, 0) / sub.length;
+      ma20PriceList.push(+avgP.toFixed(2));
+      ma20VolList.push(+avgV.toFixed(0));
+    }
+
+    const latestKline = kline[kline.length - 1];
+    const latestClose = q ? q.price : latestKline.close;
+    const latestVol = q ? q.vol : latestKline.vol;
+    const curMa20Vol = kdata.ma20Vol || 1;
+    const curMa20Price = kdata.ma20Price || latestClose;
+    const isA = /^sh|^sz|^bj/i.test(code);
+    const curRatio = (isA && q && q.volumeRatio > 0) ? q.volumeRatio : (curMa20Vol > 0 ? (latestVol / curMa20Vol) : 1.0);
+    const curState = evaluateVolumeState(curRatio, q ? q.changePct : (latestClose - latestKline.open));
+
+    // 计算成本安全边际（现价相对于20日成本线的偏离度）
+    const curBias = curMa20Price > 0 ? (((latestClose - curMa20Price) / curMa20Price) * 100) : 0;
+
+    // 映射实操行动指引标签
+    let actionText = '【持股观察】';
+    let actionColor = 'var(--accent)';
+    let actionBg = 'rgba(245,166,35,0.12)';
+    let actionBorder = 'rgba(245,166,35,0.3)';
+
+    if (curState.label === '放量进攻') {
+      actionText = '【顺势跟进】';
+      actionColor = 'var(--up)';
+      actionBg = 'rgba(255,93,93,0.14)';
+      actionBorder = 'rgba(255,93,93,0.3)';
+    } else if (curState.label === '爆量拉升') {
+      actionText = '【严控追高】';
+      actionColor = '#ffd166';
+      actionBg = 'rgba(255,93,93,0.22)';
+      actionBorder = 'rgba(255,93,93,0.4)';
+    } else if (curState.label === '放量杀跌') {
+      actionText = '【离场避险】';
+      actionColor = 'var(--danger)';
+      actionBg = 'rgba(255,71,87,0.18)';
+      actionBorder = 'rgba(255,71,87,0.4)';
+    } else if (curState.label === '恐慌出逃') {
+      actionText = '【坚决观望】';
+      actionColor = '#ff4757';
+      actionBg = '#7f1d1d';
+      actionBorder = '#b91c1c';
+    } else if (curState.label === '地量收敛') {
+      actionText = '【变盘潜伏】';
+      actionColor = 'var(--text-faint)';
+      actionBg = 'rgba(148,173,214,0.08)';
+      actionBorder = 'var(--line)';
+    } else if (curState.label === '缩量整理') {
+      actionText = '【多看少动】';
+      actionColor = 'var(--text-dim)';
+      actionBg = 'rgba(148,173,214,0.06)';
+      actionBorder = 'rgba(148,173,214,0.15)';
+    } else if (curState.label === '放量承压') {
+      actionText = '【注意防守】';
+      actionColor = 'var(--down)';
+      actionBg = 'rgba(23,201,143,0.12)';
+      actionBorder = 'rgba(23,201,143,0.3)';
+    }
+
+    // 更新顶部卡片指标
+    const cycleBadgeEl = document.getElementById('chartCycleBadge');
+    if (cycleBadgeEl) {
+      cycleBadgeEl.className = 'vol-badge ' + curState.badgeClass;
+      cycleBadgeEl.textContent = curState.label;
+    }
+    const actionBadgeEl = document.getElementById('chartCycleActionBadge');
+    if (actionBadgeEl) {
+      actionBadgeEl.textContent = actionText;
+      actionBadgeEl.style.color = actionColor;
+      actionBadgeEl.style.background = actionBg;
+      actionBadgeEl.style.borderColor = actionBorder;
+    }
+    const summaryTextEl = document.getElementById('chartCycleSummaryText');
+    if (summaryTextEl) summaryTextEl.textContent = curState.desc;
+    const ratioEl = document.getElementById('chartCycleRatio');
+    if (ratioEl) ratioEl.textContent = curRatio.toFixed(2) + 'x';
+
+    const biasEl = document.getElementById('chartCycleBias');
+    if (biasEl) {
+      const sign = curBias > 0 ? '+' : '';
+      biasEl.textContent = sign + curBias.toFixed(1) + '%';
+      biasEl.style.color = curBias > 0 ? 'var(--up)' : (curBias < 0 ? 'var(--down)' : 'var(--text)');
+    }
+
+    // 更新极简量能水温计
+    const meterBarEl = document.getElementById('chartCycleMeterBar');
+    const meterTextEl = document.getElementById('chartCycleMeterText');
+    const meterPerc = Math.min(100, Math.max(5, Math.round((curRatio / 2.5) * 100)));
+    if (meterBarEl) {
+      meterBarEl.style.width = meterPerc + '%';
+    }
+    if (meterTextEl) {
+      let tempDesc = '常态';
+      if (meterPerc >= 80) tempDesc = '过热亢奋';
+      else if (meterPerc >= 55) tempDesc = '温和放量';
+      else if (meterPerc <= 25) tempDesc = '地量低迷';
+      meterTextEl.textContent = meterPerc + '% ' + tempDesc;
+    }
+
+    // 寻找近30日天量与地量索引
+    let maxVolIdx = 0;
+    let minVolIdx = 0;
+    for (let i = 1; i < kline.length; i++) {
+      if (kline[i].vol > kline[maxVolIdx].vol) maxVolIdx = i;
+      if (kline[i].vol < kline[minVolIdx].vol) minVolIdx = i;
+    }
+
+    // 成交量柱状图数据（高亮异动，虚化常规噪点）
+    const volumeBarData = kline.map((d, i) => {
+      const isUp = d.close >= d.open;
+      const isBreakout = d.vol >= (curMa20Vol * 1.5);
+      const isLowVol = d.vol <= (curMa20Vol * 0.5);
+
+      let opacity = 0.65;
+      if (isBreakout || i === maxVolIdx) opacity = 1.0;
+      else if (isLowVol || i === minVolIdx) opacity = 0.35;
+
+      const baseCol = isUp ? '255, 93, 93' : '23, 201, 143';
+      return {
+        value: d.vol,
+        itemStyle: {
+          color: 'rgba(' + baseCol + ', ' + opacity + ')',
+          borderColor: isBreakout ? (isUp ? '#ff5d5d' : '#17c98f') : 'transparent',
+          borderWidth: isBreakout ? 1.5 : 0,
+          borderRadius: [2, 2, 0, 0]
+        }
+      };
+    });
+
+    const decimals = q ? q.decimals : 2;
+
+    const option = {
+      backgroundColor: 'transparent',
+      animation: false,
+      axisPointer: {
+        link: [{ xAxisIndex: 'all' }],
+        label: { backgroundColor: '#16223a' }
+      },
+      grid: [
+        { left: 14, right: 14, top: 20, height: '48%', containLabel: true },
+        { left: 14, right: 14, top: '70%', height: '25%', containLabel: true }
+      ],
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: '#0e1830',
+        borderColor: 'rgba(148,173,214,.25)',
+        textStyle: { color: '#e8eefb', fontSize: 11 },
+        formatter: params => {
+          if (!params || !params.length) return '';
+          const idx = params[0].dataIndex;
+          const d = kline[idx];
+          if (!d) return '';
+          const pClose = d.close.toFixed(decimals);
+          const pMa = ma20PriceList[idx] ? ma20PriceList[idx].toFixed(decimals) : '--';
+          const vVal = fmtBig(d.vol * 100) + '股';
+          const vMa = ma20VolList[idx] ? fmtBig(ma20VolList[idx] * 100) + '股' : '--';
+          const ratio = (ma20VolList[idx] > 0) ? (d.vol / ma20VolList[idx]).toFixed(2) + 'x' : '--';
+          const isUpDay = d.close >= d.open;
+          const dayDiffPct = d.open > 0 ? (((d.close - d.open) / d.open) * 100).toFixed(2) : '0.00';
+          const daySign = isUpDay ? '+' : '';
+          const dayTag = (d.vol >= (ma20VolList[idx] * 1.5))
+            ? (isUpDay ? '放量进攻' : '放量杀跌')
+            : (d.vol <= (ma20VolList[idx] * 0.5) ? '地量收敛' : (isUpDay ? '温和推升' : '缩量回踩'));
+
+          return '<div style="font-weight:700; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(148,173,214,0.15); padding-bottom:4px;">' +
+            '<span style="color:var(--text);">' + d.date + '</span>' +
+            '<span class="vol-badge" style="background:rgba(148,173,214,0.12); color:' + (isUpDay ? 'var(--up)' : 'var(--down)') + ';">' + dayTag + ' (' + daySign + dayDiffPct + '%)</span>' +
+            '</div>' +
+            '<div style="display:flex; justify-content:space-between; gap:16px; margin:3px 0;">' +
+            '<span style="color:var(--text-dim);"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffffff;margin-right:5px;"></span>收盘价:</span>' +
+            '<b class="num" style="color:#ffffff;">' + pClose + '</b></div>' +
+            '<div style="display:flex; justify-content:space-between; gap:16px; margin:3px 0;">' +
+            '<span style="color:var(--text-dim);"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#38bdf8;margin-right:5px;"></span>20日成本:</span>' +
+            '<b class="num" style="color:#38bdf8;">' + pMa + '</b></div>' +
+            '<div style="display:flex; justify-content:space-between; gap:16px; margin:3px 0; padding-top:4px; border-top:1px dashed rgba(148,173,214,0.1);">' +
+            '<span style="color:var(--text-dim);"><span style="display:inline-block;width:7px;height:7px;border-radius:2px;background:' + (isUpDay ? '#ff5d5d' : '#17c98f') + ';margin-right:5px;"></span>成交量:</span>' +
+            '<b class="num">' + vVal + '</b></div>' +
+            '<div style="display:flex; justify-content:space-between; gap:16px; margin:3px 0;">' +
+            '<span style="color:var(--text-dim);"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#f5a623;margin-right:5px;"></span>20日均量:</span>' +
+            '<b class="num" style="color:#f5a623;">' + vMa + '</b></div>' +
+            '<div style="display:flex; justify-content:space-between; gap:16px; margin:3px 0;">' +
+            '<span style="color:var(--text-dim);"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ffd166;margin-right:5px;"></span>放量倍率:</span>' +
+            '<b class="num" style="color:#ffd166;">' + ratio + '</b></div>';
+        }
+      },
+      xAxis: [
+        {
+          type: 'category',
+          data: dates,
+          gridIndex: 0,
+          boundaryGap: true,
+          axisLine: { lineStyle: { color: 'rgba(148,173,214,.18)' } },
+          axisLabel: { show: false },
+          axisTick: { show: false }
+        },
+        {
+          type: 'category',
+          data: dates,
+          gridIndex: 1,
+          boundaryGap: true,
+          axisLine: { lineStyle: { color: 'rgba(148,173,214,.18)' } },
+          axisLabel: { color: '#5f7396', fontSize: 10, interval: Math.floor(dates.length / 5) },
+          axisTick: { show: false }
+        }
+      ],
+      yAxis: [
+        {
+          type: 'value',
+          gridIndex: 0,
+          scale: true,
+          splitLine: { lineStyle: { color: 'rgba(148,173,214,.08)' } },
+          axisLabel: { color: '#5f7396', fontSize: 10, formatter: v => v.toFixed(decimals) }
+        },
+        {
+          type: 'value',
+          gridIndex: 1,
+          scale: false,
+          min: 0,
+          splitLine: { lineStyle: { color: 'rgba(148,173,214,.06)' } },
+          axisLabel: {
+            color: '#5f7396',
+            fontSize: 9,
+            formatter: v => fmtBig(v * 100)
+          }
+        }
+      ],
+      series: [
+        // 1. 上轨收盘价折线（高亮纯白）
+        {
+          name: '收盘价',
+          type: 'line',
+          xAxisIndex: 0,
+          yAxisIndex: 0,
+          data: prices,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: { width: 2.2, color: '#ffffff' },
+          areaStyle: {
+            color: {
+              type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(255,255,255,.12)' },
+                { offset: 1, color: 'rgba(255,255,255,.01)' }
+              ]
+            }
+          },
+          markPoint: {
+            symbol: 'circle',
+            symbolSize: 4,
+            label: { fontSize: 9, color: '#8fa3c3', position: 'top' },
+            data: [
+              { type: 'max', name: '最高', label: { formatter: '最高 {c}' }, itemStyle: { color: '#ff5d5d' } },
+              { type: 'min', name: '最低', label: { position: 'bottom', formatter: '最低 {c}' }, itemStyle: { color: '#17c98f' } }
+            ]
+          }
+        },
+        // 2. 上轨 20日均价成本线（天蓝虚线）
+        {
+          name: '20日均价成本',
+          type: 'line',
+          xAxisIndex: 0,
+          yAxisIndex: 0,
+          data: ma20PriceList,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: { width: 1.5, color: '#38bdf8', type: [4, 4] }
+        },
+        // 3. 下轨成交量柱状图（带天量与地量图上打标）
+        {
+          name: '成交量',
+          type: 'bar',
+          xAxisIndex: 1,
+          yAxisIndex: 1,
+          data: volumeBarData,
+          barMaxWidth: 14,
+          markPoint: {
+            data: [
+              {
+                coord: [dates[maxVolIdx], kline[maxVolIdx].vol],
+                name: '天量',
+                symbol: 'pin',
+                symbolSize: 26,
+                itemStyle: { color: '#ff5d5d' },
+                label: { formatter: '天量', fontSize: 9, color: '#ffffff', offset: [0, -2] }
+              },
+              {
+                coord: [dates[minVolIdx], kline[minVolIdx].vol],
+                name: '地量',
+                symbol: 'pin',
+                symbolSize: 26,
+                itemStyle: { color: '#38bdf8' },
+                label: { formatter: '地量', fontSize: 9, color: '#ffffff', offset: [0, -2] }
+              }
+            ]
+          }
+        },
+        // 4. 下轨 20日均量中枢线（琥珀金色）
+        {
+          name: '20日均量中枢',
+          type: 'line',
+          xAxisIndex: 1,
+          yAxisIndex: 1,
+          data: ma20VolList,
+          smooth: true,
+          symbol: 'none',
+          lineStyle: { width: 1.8, color: '#f5a623' },
+          markLine: {
+            symbol: 'none',
+            silent: true,
+            data: [
+              {
+                yAxis: +(curMa20Vol * 1.5).toFixed(0),
+                lineStyle: { color: 'rgba(255, 93, 93, 0.65)', type: 'dashed', width: 1 },
+                label: {
+                  position: 'insideStartTop',
+                  padding: [2, 6],
+                  backgroundColor: 'rgba(17,26,44,0.88)',
+                  borderRadius: 3,
+                  color: '#ff9f9f',
+                  fontSize: 9,
+                  formatter: '1.5x 突破警戒'
+                }
+              },
+              {
+                yAxis: +(curMa20Vol * 0.5).toFixed(0),
+                lineStyle: { color: 'rgba(148, 173, 214, 0.45)', type: 'dashed', width: 1 },
+                label: {
+                  position: 'insideStartBottom',
+                  padding: [2, 6],
+                  backgroundColor: 'rgba(17,26,44,0.88)',
+                  borderRadius: 3,
+                  color: '#8fa3c3',
+                  fontSize: 9,
+                  formatter: '0.5x 地量基线'
+                }
+              }
+            ]
+          }
+        }
+      ]
+    };
+
+    chartInstance.setOption(option, true);
+    chartInstance.resize();
+  }
+
+  function setChartTab(tab) {
+    activeChartTab = tab;
+    const btnMinute = document.getElementById('btnTabMinute');
+    const btnCycle = document.getElementById('btnTabCycle');
+    const cycleHeader = document.getElementById('chartCycleHeader');
+
+    if (btnMinute && btnCycle) {
+      if (tab === 'minute') {
+        btnMinute.classList.add('active');
+        btnMinute.style.background = 'var(--panel)';
+        btnMinute.style.color = 'var(--accent)';
+        btnCycle.classList.remove('active');
+        btnCycle.style.background = 'transparent';
+        btnCycle.style.color = 'var(--text-dim)';
+        if (cycleHeader) cycleHeader.style.display = 'none';
+      } else {
+        btnCycle.classList.add('active');
+        btnCycle.style.background = 'var(--panel)';
+        btnCycle.style.color = 'var(--accent)';
+        btnMinute.classList.remove('active');
+        btnMinute.style.background = 'transparent';
+        btnMinute.style.color = 'var(--text-dim)';
+        if (cycleHeader) cycleHeader.style.display = 'flex';
+      }
+    }
+
+    renderSelectedChart();
+  }
+
+  function bindEvents() {
+    const pill = document.getElementById('marketLiquidityPill');
+    const pop = document.getElementById('marketLiquidityPopover');
+    const closeBtn = document.getElementById('liquidityCloseBtn');
+    const btnMin = document.getElementById('btnTabMinute');
+    const btnCyc = document.getElementById('btnTabCycle');
+
+    if (pill && pop) {
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pop.classList.toggle('open');
+      });
+    }
+    if (closeBtn && pop) {
+      closeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pop.classList.remove('open');
+      });
+    }
+    document.addEventListener('click', (e) => {
+      if (pop && pop.classList.contains('open') && !pop.contains(e.target) && (!pill || !pill.contains(e.target))) {
+        pop.classList.remove('open');
+      }
+    });
+
+    if (btnMin) btnMin.addEventListener('click', () => setChartTab('minute'));
+    if (btnCyc) btnCyc.addEventListener('click', () => setChartTab('dailyCycle'));
+  }
+
+  return {
+    getActiveTab: () => activeChartTab,
+    setChartTab,
+    getMonitorVolumeSummary,
+    fetchDailyKline,
+    updateMarketLiquidity,
+    renderDailyCycleChart,
+    bindEvents
+  };
+})();
+
 /* ================= 列表渲染 ================= */
 function renderTable() {
   const tbody = els.monitorTbody;
@@ -4674,6 +5652,9 @@ function renderTable() {
 
     const catBadgeHtml = NewsCatalystEngine.renderRowBadge(item.code);
     const radarHtml = QuantCompassEngine.renderMicroRadar(item.code);
+    const volSummary = (typeof VolumeCycleEngine !== 'undefined') ? VolumeCycleEngine.getMonitorVolumeSummary(item.code, q) : null;
+    const volHtml = volSummary ? volSummary.html : '--';
+
     let actionsHtml = '';
     if (item.status === 'triggered') {
       actionsHtml = '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); stopAlarmItem(\'' + item.id + '\')">停止提醒</button>';
@@ -4704,6 +5685,7 @@ function renderTable() {
       '<td class="num" style="font-weight: 600; color: var(--accent);">' + condText + '</td>' +
       '<td>' + distHtml + '</td>' +
       '<td>' + amtHtml + '</td>' +
+      '<td class="col-vol">' + volHtml + '</td>' +
       '<td>' + statusBadge + '</td>' +
       '<td style="text-align: right; padding-right: 18px;">' +
         '<div class="actions-cell" style="justify-content: flex-end;">' + actionsHtml + '</div>' +
@@ -5841,6 +6823,15 @@ NewsCatalystEngine.subscribe((code, result) => {
 
   // 盘中量化脉冲全局 HUD 初始化刷新
   updateGlobalPulseHud();
+
+  // 绑定量能周期与大盘水温事件，并初始化拉取大盘宏观水温
+  if (typeof VolumeCycleEngine !== 'undefined') {
+    VolumeCycleEngine.bindEvents();
+    VolumeCycleEngine.updateMarketLiquidity();
+    setInterval(() => {
+      VolumeCycleEngine.updateMarketLiquidity();
+    }, 60000);
+  }
 })();
 </script>
 </body>
