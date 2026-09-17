@@ -1704,14 +1704,18 @@
           <span class="dot" style="background: var(--accent); box-shadow: 0 0 8px rgba(245,166,35,0.8);"></span>
           <span id="marketLiquidityText">大盘水温: 探测中</span>
         </div>
-        <div id="marketLiquidityPopover" class="settings-popover" style="width: 320px;" role="dialog" aria-label="大盘流动性水温面板">
-          <div class="popover-header">
-            <span class="popover-title">大盘宏观流动性周期</span>
+        <div id="marketLiquidityPopover" class="settings-popover" style="width: 328px;" role="dialog" aria-label="大盘流动性水温面板">
+          <div class="popover-header" style="display: flex; align-items: center; justify-content: space-between;">
+            <span class="popover-title">大盘流动性周期</span>
+            <div class="chart-tab-group" id="liqMarketTabs" style="display: inline-flex; background: var(--panel-2); padding: 2px; border-radius: 6px; border: 1px solid var(--line); margin-left: auto; margin-right: 8px;">
+              <button id="btnLiqA" class="chart-tab-btn active" style="border: none; background: var(--panel); color: var(--accent); padding: 2px 8px; font-size: 10px; font-weight: 600; border-radius: 4px; cursor: pointer;">A股上证</button>
+              <button id="btnLiqHk" class="chart-tab-btn" style="border: none; background: transparent; color: var(--text-dim); padding: 2px 8px; font-size: 10px; font-weight: 500; border-radius: 4px; cursor: pointer;">港股恒指</button>
+            </div>
             <button id="liquidityCloseBtn" class="popover-close" aria-label="关闭大盘水温面板" title="关闭">✕</button>
           </div>
           <div class="popover-section" style="gap: 8px;">
             <div style="display: flex; align-items: center; justify-content: space-between;">
-              <span class="popover-section-label">上证指数 (sh000001)</span>
+              <span id="liqMarketIndexTitle" class="popover-section-label">上证指数 (sh000001)</span>
               <span id="liqClimateBadge" class="qp-badge warn">增量探测中</span>
             </div>
             <div style="display: flex; align-items: baseline; justify-content: space-between; margin-top: 2px;">
@@ -2975,6 +2979,9 @@ async function renderSelectedChart() {
   els.chartCard.classList.add('show');
   renderQuantCompass(item.code);
   loadChartCatalysts(item.code, false);
+  if (typeof VolumeCycleEngine !== 'undefined') {
+    VolumeCycleEngine.syncMarketLiquidityForStock(item.code);
+  }
 
   if (typeof VolumeCycleEngine !== 'undefined' && VolumeCycleEngine.getActiveTab() === 'dailyCycle') {
     VolumeCycleEngine.renderDailyCycleChart(item, q);
@@ -4760,7 +4767,11 @@ function updateCatalystTabCounts(items) {
 const VolumeCycleEngine = (function() {
   const cache = {};
   let activeChartTab = 'minute';
-  let marketLiquidityData = null;
+  let activeMarketMode = 'auto'; // 'auto' | 'sh' | 'hk'
+  const marketLiquidityData = {
+    sh: null,
+    hk: null
+  };
   let isFetchingMarket = false;
 
   function evaluateVolumeState(volRatio, changePct) {
@@ -4984,96 +4995,194 @@ const VolumeCycleEngine = (function() {
     }
   }
 
+
+  function renderMarketLiquidityView(targetMarket) {
+    let m = targetMarket;
+    if (!m || m === 'auto') {
+      if (activeMarketMode !== 'auto') {
+        m = activeMarketMode;
+      } else {
+        m = (currentChartCode && /^hk/i.test(currentChartCode)) ? 'hk' : 'sh';
+      }
+    }
+
+    const data = marketLiquidityData[m];
+    if (!data) return;
+
+    const pillTextEl = document.getElementById('marketLiquidityText');
+    if (pillTextEl) {
+      const prefix = m === 'hk' ? '恒指: ' : '上证: ';
+      pillTextEl.textContent = prefix + data.pillText + ' (' + (data.volRatio >= 1 ? '+' : '') + data.biasPct.toFixed(0) + '%)';
+    }
+
+    const titleEl = document.getElementById('liqMarketIndexTitle');
+    if (titleEl) {
+      titleEl.textContent = m === 'hk' ? '恒生指数 (hkHSI)' : '上证指数 (sh000001)';
+    }
+
+    const btnA = document.getElementById('btnLiqA');
+    const btnHk = document.getElementById('btnLiqHk');
+    if (btnA && btnHk) {
+      if (m === 'sh') {
+        btnA.classList.add('active');
+        btnA.style.background = 'var(--panel)';
+        btnA.style.color = 'var(--accent)';
+        btnHk.classList.remove('active');
+        btnHk.style.background = 'transparent';
+        btnHk.style.color = 'var(--text-dim)';
+      } else {
+        btnHk.classList.add('active');
+        btnHk.style.background = 'var(--panel)';
+        btnHk.style.color = 'var(--accent)';
+        btnA.classList.remove('active');
+        btnA.style.background = 'transparent';
+        btnA.style.color = 'var(--text-dim)';
+      }
+    }
+
+    const climateBadgeEl = document.getElementById('liqClimateBadge');
+    if (climateBadgeEl) {
+      climateBadgeEl.className = data.badgeClass;
+      climateBadgeEl.textContent = data.climate;
+    }
+
+    const todayAmtEl = document.getElementById('liqTodayAmt');
+    if (todayAmtEl) {
+      const unit = m === 'hk' ? '港元' : '元';
+      todayAmtEl.textContent = data.todayAmt > 0 ? (fmtBig(data.todayAmt) + unit) : (fmtBig(data.lastVol * 100) + '股');
+    }
+
+    const biasRatioEl = document.getElementById('liqBiasRatio');
+    if (biasRatioEl) {
+      const sign = data.biasPct > 0 ? '+' : '';
+      biasRatioEl.textContent = sign + data.biasPct.toFixed(1) + '% (' + data.volRatio.toFixed(2) + 'x)';
+      biasRatioEl.style.color = data.volRatio >= 1.15 ? 'var(--up)' : (data.volRatio < 0.85 ? 'var(--down)' : 'var(--accent)');
+    }
+
+    const percValEl = document.getElementById('liqPercentileVal');
+    const percBarEl = document.getElementById('liqPercentileBar');
+    if (percValEl && percBarEl) {
+      percValEl.textContent = data.percentile + '% 分位';
+      percBarEl.style.width = Math.min(100, Math.max(5, data.percentile)) + '%';
+      percBarEl.style.background = data.percentile >= 70 ? 'var(--up)' : (data.percentile <= 30 ? 'var(--down)' : 'var(--accent)');
+    }
+
+    const diagEl = document.getElementById('liqDiagnosisNote');
+    if (diagEl) diagEl.textContent = data.diagnosis;
+
+    const dateEl = document.getElementById('liqSparkDate');
+    if (dateEl && data.kline.length) {
+      dateEl.textContent = data.kline[0].date.slice(5) + ' 至 ' + data.kline[data.kline.length - 1].date.slice(5);
+    }
+
+    drawMarketSparkline(data.kline, data.ma20Vol);
+  }
+
+  function syncMarketLiquidityForStock(code) {
+    if (!code) return;
+    if (activeMarketMode === 'auto') {
+      const isHk = /^hk/i.test(code);
+      renderMarketLiquidityView(isHk ? 'hk' : 'sh');
+    }
+  }
+
   async function updateMarketLiquidity() {
     if (isFetchingMarket) return;
     isFetchingMarket = true;
     try {
       try {
-        const qRes = await fetchBatchQuotes(['sh000001']);
-        if (qRes && qRes['sh000001']) {
-          quotes['sh000001'] = qRes['sh000001'];
+        const qRes = await fetchBatchQuotes(['sh000001', 'r_hkHSI']);
+        if (qRes) {
+          if (qRes['sh000001']) quotes['sh000001'] = qRes['sh000001'];
+          if (qRes['r_hkHSI']) quotes['hkHSI'] = qRes['r_hkHSI'];
         }
       } catch (e) {}
 
+      // 1. 上证指数 (sh000001)
       const sseData = await fetchDailyKline('sh000001', 35);
-      if (!sseData || !sseData.kline || sseData.kline.length < 5) return;
+      if (sseData && sseData.kline && sseData.kline.length >= 5) {
+        const qSh = quotes['sh000001'];
+        const todayVol = (qSh && qSh.vol > 0) ? qSh.vol : sseData.lastVol;
+        const todayAmt = (qSh && qSh.amt > 0) ? qSh.amt : 0;
+        const ma20Vol = sseData.ma20Vol || 1;
+        const volRatio = todayVol / ma20Vol;
+        const biasPct = ((volRatio - 1) * 100);
 
-      const q = quotes['sh000001'];
-      let todayVol = (q && q.vol > 0) ? q.vol : sseData.lastVol;
-      let todayAmt = (q && q.amt > 0) ? q.amt : 0;
+        let climate = '存量轮动';
+        let badgeClass = 'qp-badge warn';
+        let pillText = '存量博弈';
+        let diagnosis = '上证成交处于20日中枢常态区间，板块轮动加速，严控追高，适合高抛低吸。';
 
-      const ma20Vol = sseData.ma20Vol || 1;
-      const volRatio = todayVol / ma20Vol;
-      const biasPct = ((volRatio - 1) * 100);
+        if (volRatio >= 1.15) {
+          climate = '增量主升';
+          badgeClass = 'qp-badge bull';
+          pillText = '增量博弈';
+          diagnosis = '上证成交量明显超越20日均量（偏离度 +' + biasPct.toFixed(1) + '%），增量资金入场，市场容错率极高，支持右侧突破。';
+        } else if (volRatio < 0.85) {
+          climate = '缩量退潮';
+          badgeClass = 'qp-badge bear';
+          pillText = '缩量退潮';
+          diagnosis = '上证成交量较20日均量显著萎缩（偏离度 ' + biasPct.toFixed(1) + '%），资金谨慎观望，赚钱效应收缩，防御为主。';
+        }
 
-      let climate = '存量轮动';
-      let badgeClass = 'qp-badge warn';
-      let pillText = '存量博弈';
-      let diagnosis = '大盘成交处于20日中枢常态区间，板块轮动加速，严控追高，适合高抛低吸。';
-
-      if (volRatio >= 1.15) {
-        climate = '增量主升';
-        badgeClass = 'qp-badge bull';
-        pillText = '增量博弈';
-        diagnosis = '大盘成交量明显超越20日均量（偏离度 +' + biasPct.toFixed(1) + '%），增量资金入场，市场容错率极高，支持右侧突破。';
-      } else if (volRatio < 0.85) {
-        climate = '缩量退潮';
-        badgeClass = 'qp-badge bear';
-        pillText = '缩量退潮';
-        diagnosis = '大盘成交量较20日均量显著萎缩（偏离度 ' + biasPct.toFixed(1) + '%），资金谨慎观望，赚钱效应收缩，防御为主。';
+        marketLiquidityData.sh = {
+          kline: sseData.kline,
+          ma20Vol: ma20Vol,
+          lastVol: sseData.lastVol,
+          percentile: sseData.percentile,
+          volRatio: volRatio,
+          biasPct: biasPct,
+          climate: climate,
+          badgeClass: badgeClass,
+          pillText: pillText,
+          diagnosis: diagnosis,
+          todayAmt: todayAmt
+        };
       }
 
-      marketLiquidityData = {
-        sseData,
-        volRatio,
-        biasPct,
-        climate,
-        badgeClass,
-        pillText,
-        diagnosis,
-        todayAmt
-      };
+      // 2. 恒生指数 (hkHSI)
+      const hsiData = await fetchDailyKline('hkHSI', 35);
+      if (hsiData && hsiData.kline && hsiData.kline.length >= 5) {
+        const qHk = quotes['hkHSI'] || quotes['r_hkHSI'];
+        const todayVol = (qHk && qHk.vol > 0) ? qHk.vol : hsiData.lastVol;
+        const todayAmt = (qHk && qHk.amt > 0) ? (qHk.amt * 10000) : hsiData.lastVol;
+        const ma20Vol = hsiData.ma20Vol || 1;
+        const volRatio = todayVol / ma20Vol;
+        const biasPct = ((volRatio - 1) * 100);
 
-      const pillTextEl = document.getElementById('marketLiquidityText');
-      if (pillTextEl) {
-        pillTextEl.textContent = '大盘: ' + pillText + ' (' + (volRatio >= 1 ? '+' : '') + biasPct.toFixed(0) + '%)';
+        let climate = '存量博弈';
+        let badgeClass = 'qp-badge warn';
+        let pillText = '存量博弈';
+        let diagnosis = '恒指交投处于20日均量中枢区间，离岸资金博弈平衡，以结构性行情为主。';
+
+        if (volRatio >= 1.15) {
+          climate = '增量活跃';
+          badgeClass = 'qp-badge bull';
+          pillText = '增量博弈';
+          diagnosis = '港股流动性显著超越20日均量（偏离度 +' + biasPct.toFixed(1) + '%），海外与南向增量共振，风险偏好上升。';
+        } else if (volRatio < 0.85) {
+          climate = '缩量低迷';
+          badgeClass = 'qp-badge bear';
+          pillText = '缩量低迷';
+          diagnosis = '港股交投较20日均量明显萎缩（偏离度 ' + biasPct.toFixed(1) + '%），外资谨慎观望，需防范流动性折价。';
+        }
+
+        marketLiquidityData.hk = {
+          kline: hsiData.kline,
+          ma20Vol: ma20Vol,
+          lastVol: hsiData.lastVol,
+          percentile: hsiData.percentile,
+          volRatio: volRatio,
+          biasPct: biasPct,
+          climate: climate,
+          badgeClass: badgeClass,
+          pillText: pillText,
+          diagnosis: diagnosis,
+          todayAmt: todayAmt
+        };
       }
 
-      const climateBadgeEl = document.getElementById('liqClimateBadge');
-      if (climateBadgeEl) {
-        climateBadgeEl.className = badgeClass;
-        climateBadgeEl.textContent = climate;
-      }
-
-      const todayAmtEl = document.getElementById('liqTodayAmt');
-      if (todayAmtEl) {
-        todayAmtEl.textContent = todayAmt > 0 ? fmtBig(todayAmt) : (fmtBig(sseData.lastVol * 100) + '股');
-      }
-
-      const biasRatioEl = document.getElementById('liqBiasRatio');
-      if (biasRatioEl) {
-        const sign = biasPct > 0 ? '+' : '';
-        biasRatioEl.textContent = sign + biasPct.toFixed(1) + '% (' + volRatio.toFixed(2) + 'x)';
-        biasRatioEl.style.color = volRatio >= 1.15 ? 'var(--up)' : (volRatio < 0.85 ? 'var(--down)' : 'var(--accent)');
-      }
-
-      const percValEl = document.getElementById('liqPercentileVal');
-      const percBarEl = document.getElementById('liqPercentileBar');
-      if (percValEl && percBarEl) {
-        percValEl.textContent = sseData.percentile + '% 分位';
-        percBarEl.style.width = Math.min(100, Math.max(5, sseData.percentile)) + '%';
-        percBarEl.style.background = sseData.percentile >= 70 ? 'var(--up)' : (sseData.percentile <= 30 ? 'var(--down)' : 'var(--accent)');
-      }
-
-      const diagEl = document.getElementById('liqDiagnosisNote');
-      if (diagEl) diagEl.textContent = diagnosis;
-
-      const dateEl = document.getElementById('liqSparkDate');
-      if (dateEl && sseData.kline.length) {
-        dateEl.textContent = sseData.kline[0].date.slice(5) + ' 至 ' + sseData.kline[sseData.kline.length - 1].date.slice(5);
-      }
-
-      drawMarketSparkline(sseData.kline, sseData.ma20Vol);
+      renderMarketLiquidityView();
     } finally {
       isFetchingMarket = false;
     }
@@ -5556,6 +5665,23 @@ const VolumeCycleEngine = (function() {
 
     if (btnMin) btnMin.addEventListener('click', () => setChartTab('minute'));
     if (btnCyc) btnCyc.addEventListener('click', () => setChartTab('dailyCycle'));
+
+    const btnLiqA = document.getElementById('btnLiqA');
+    const btnLiqHk = document.getElementById('btnLiqHk');
+    if (btnLiqA) {
+      btnLiqA.addEventListener('click', (e) => {
+        e.stopPropagation();
+        activeMarketMode = 'sh';
+        renderMarketLiquidityView('sh');
+      });
+    }
+    if (btnLiqHk) {
+      btnLiqHk.addEventListener('click', (e) => {
+        e.stopPropagation();
+        activeMarketMode = 'hk';
+        renderMarketLiquidityView('hk');
+      });
+    }
   }
 
   return {
@@ -5564,6 +5690,7 @@ const VolumeCycleEngine = (function() {
     getMonitorVolumeSummary,
     fetchDailyKline,
     updateMarketLiquidity,
+    syncMarketLiquidityForStock,
     renderDailyCycleChart,
     bindEvents
   };
