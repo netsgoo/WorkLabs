@@ -2619,6 +2619,8 @@ let quotes = {};         // { [code]: quoteObj }
 let selectedId = null;   // 当前展示分时图的 monitorId
 let isChartCollapsed = false; // 用户是否手动收起了走势图
 let timer = null;
+let heartbeatWorker = null;   // Web Worker 后台独立心跳计时器（免疫浏览器标签页节流）
+let isPollingInFlight = false; // 轮询防重入互斥锁
 let chartRefreshTimer = null;
 let refreshInterval = 5000;
 let currentSoundType = 'chime';
@@ -2780,12 +2782,8 @@ function normalizeCode(raw) {
   if (/^hk\d{5}$/.test(s)) return s;
   if (/^\d{5}$/.test(s)) return 'hk' + s;
   if (/^\d{6}$/.test(s)) {
-    if (/^[68]/.test(s)) {
-      if (/^8[2378]/.test(s)) return 'bj' + s;
-      return 'sh' + s;
-    }
-    if (/^[03]/.test(s)) return 'sz' + s;
-    if (/^[49]/.test(s)) return 'bj' + s;
+    if (/^(0|3|12|13|15|16|18|20[0-3])/.test(s)) return 'sz' + s;
+    if (/^(43|83|87|88|92)/.test(s)) return 'bj' + s;
     return 'sh' + s;
   }
   return '';
@@ -2854,8 +2852,8 @@ function getMarketState(code) {
     // 港股：
     // 09:00 - 09:30 开市前竞价时段；09:30 - 12:00 上午持续交易
     // 12:00 - 13:00 午间休市
-    // 13:00 - 16:00 下午持续交易（含收市竞价）
-    if ((mins >= 540 && mins <= 720) || (mins >= 780 && mins <= 960)) {
+    // 13:00 - 16:10 下午持续交易与收市竞价时段 (CAS 16:00~16:10)
+    if ((mins >= 540 && mins <= 720) || (mins >= 780 && mins <= 970)) {
       return 'trading';
     }
     if (mins > 720 && mins < 780) {
@@ -2911,7 +2909,7 @@ function getMsUntilNextMarketWakeup() {
 
   const hasHk = monitors.some(it => /^hk/.test(it.code));
   const targetSecs = hasHk ? (8 * 3600 + 59 * 60 + 58) : (9 * 3600 + 14 * 60 + 58);
-  const marketCloseSecs = hasHk ? (16 * 3600) : (15 * 3600);
+  const marketCloseSecs = hasHk ? (16 * 3600 + 10 * 60) : (15 * 3600);
 
   let daysToAdd = 0;
   if (day === 5 && currentSecs >= marketCloseSecs) {
@@ -3209,8 +3207,8 @@ function parseQuote(code, raw) {
       if (rawCalc > 0 && Math.abs(rawCalc - (+f[3])) / (+f[3]) < 0.35) vwap = rawCalc;
     }
   } else {
-    // 港股字段51为市盈率，均价字段实测为73（或由成交额/成交股数计算）
-    const hkVwap = +f[73] || +f[71] || 0;
+    // 港股字段51为市盈率，均价字段实测为73（或由成交额/成交股数计算），严禁使用71
+    const hkVwap = +f[73] || 0;
     if (hkVwap > 0 && Math.abs(hkVwap - (+f[3])) / (+f[3]) < 0.35) {
       vwap = hkVwap;
     } else if (vol > 0 && amt > 0) {
@@ -3222,6 +3220,25 @@ function parseQuote(code, raw) {
   const a1_v = +f[20] || 0, a2_v = +f[22] || 0, a3_v = +f[24] || 0, a4_v = +f[26] || 0, a5_v = +f[28] || 0;
   const totalBidVol = b1_v + b2_v + b3_v + b4_v + b5_v;
   const totalAskVol = a1_v + a2_v + a3_v + a4_v + a5_v;
+
+  // 动态根据标的返回精度自适应小数位（全面兼容ETF、LOF与可转债的3位小数）
+  const priceDecimals = (f[3] && f[3].includes('.')) ? f[3].split('.')[1].length : 0;
+  const prevDecimals = (f[4] && f[4].includes('.')) ? f[4].split('.')[1].length : 0;
+  const detectedDecimals = Math.max(priceDecimals, prevDecimals);
+  const decimals = detectedDecimals >= 2 ? Math.min(detectedDecimals, 4) : (isA ? 2 : 3);
+
+  // 提取交易所原生真实撮合时间（时效性核心判据）
+  let tradeTimeStr = '';
+  if (f[30]) {
+    const rawT = String(f[30]);
+    if (rawT.includes(':')) {
+      tradeTimeStr = rawT.split(' ')[1] || rawT;
+    } else if (rawT.length >= 14) {
+      tradeTimeStr = rawT.slice(8, 10) + ':' + rawT.slice(10, 12) + ':' + rawT.slice(12, 14);
+    } else {
+      tradeTimeStr = rawT;
+    }
+  }
 
   return {
     name: f[1],
@@ -3236,11 +3253,11 @@ function parseQuote(code, raw) {
     vol: vol,
     amt: amt,
     isA: isA,
-    decimals: isA ? 2 : 3,
+    decimals: decimals,
     outerVol: outerVol,
     innerVol: innerVol,
     activeBuyRatio: (outerVol + innerVol > 0) ? Math.round((outerVol / (outerVol + innerVol)) * 100) : 50,
-    volumeRatio: isA ? (+f[49] || 1) : 0,
+    volumeRatio: isA ? (+f[49] || 1) : (+f[50] || 0),
     turnoverRate: +f[38] || 0,
     vwap: vwap,
     vwapBiasPct: (vwap > 0) ? +(((+f[3] - vwap) / vwap) * 100).toFixed(2) : 0,
@@ -3248,7 +3265,8 @@ function parseQuote(code, raw) {
     totalAskVol: totalAskVol,
     orderImbalancePct: (totalBidVol + totalAskVol > 0) ? Math.round(((totalBidVol - totalAskVol) / (totalBidVol + totalAskVol)) * 100) : 0,
     b1_p: +f[9] || 0, b1_v: b1_v,
-    a1_p: +f[19] || 0, a1_v: a1_v
+    a1_p: +f[19] || 0, a1_v: a1_v,
+    tradeTime: tradeTimeStr
   };
 }
 
@@ -3465,19 +3483,22 @@ function syncChartPulse() {
 
 /* ================= 轮询与核心提醒触发 ================= */
 async function pollCycle() {
-  if (!monitors.length) {
-    selectedId = null;
-    els.chartCard.classList.remove('show');
-    if (isThrottling) {
-      isThrottling = false;
-      restartTimer();
+  if (isPollingInFlight) return;
+  isPollingInFlight = true;
+  try {
+    if (!monitors.length) {
+      selectedId = null;
+      els.chartCard.classList.remove('show');
+      if (isThrottling) {
+        isThrottling = false;
+        restartTimer();
+      }
+      updateGlobalStatus();
+      renderTable();
+      return;
     }
-    updateGlobalStatus();
-    renderTable();
-    return;
-  }
-  const codeList = Array.from(new Set(monitors.map(m => m.code)));
-  const latest = await fetchBatchQuotes(codeList);
+    const codeList = Array.from(new Set(monitors.map(m => m.code)));
+    const latest = await fetchBatchQuotes(codeList);
   const fetchedCount = Object.keys(latest).length;
 
   if (fetchedCount > 0) {
@@ -3517,10 +3538,10 @@ async function pollCycle() {
       if (item.status === 'watching') {
         let hit = false;
         let reason = null;
-        if (item.upperTarget != null && q.price >= item.upperTarget) {
+        if (item.upperTarget != null && q.price > 0 && q.price >= item.upperTarget) {
           hit = true;
           reason = 'upper';
-        } else if (item.lowerTarget != null && q.price <= item.lowerTarget) {
+        } else if (item.lowerTarget != null && q.price > 0 && q.price <= item.lowerTarget) {
           hit = true;
           reason = 'lower';
         }
@@ -3570,6 +3591,9 @@ async function pollCycle() {
       const curItem = monitors.find(m => m.id === selectedId);
       if (curItem) renderQuantCompass(curItem.code);
     }
+  }
+  } finally {
+    isPollingInFlight = false;
   }
 }
 
@@ -3851,13 +3875,16 @@ const QuantCompassEngine = (function() {
       }
     }
 
-    const overall = Math.round(
-      vpScore * 0.25 +
-      shapeScore * 0.20 +
-      depthScore * 0.15 +
-      tickScore * 0.25 +
-      trendScore * 0.15
-    );
+    const isHkCode = !/^sh|^sz|^bj/.test(code);
+    const overall = isHkCode
+      ? Math.round(vpScore * 0.35 + shapeScore * 0.30 + trendScore * 0.35)
+      : Math.round(
+          vpScore * 0.25 +
+          shapeScore * 0.20 +
+          depthScore * 0.15 +
+          tickScore * 0.25 +
+          trendScore * 0.15
+        );
     let grade = 'NEUTRAL';
     let gradeText = '⚪ 震荡拉锯 (平稳别折腾)';
     let gradeBadge = 'neutral';
@@ -3879,10 +3906,18 @@ const QuantCompassEngine = (function() {
       gradeBadge = 'bear';
     }
 
+    if (isHkCode) {
+      gradeText += ' · 港股三维量化';
+    }
+
     const vpState = vpScore >= 65 ? { text: '冲劲充沛', cls: 'up' } : (vpScore >= 45 ? { text: '温和正常', cls: 'neutral' } : { text: '冲劲不足', cls: 'down' });
     const shapeState = shapeScore >= 60 ? { text: '站稳均线', cls: 'up' } : (shapeScore >= 45 ? { text: '均线缠绕', cls: 'neutral' } : { text: '破位转弱', cls: 'down' });
-    const depthState = depthScore >= 60 ? { text: '托底扎实', cls: 'up' } : (depthScore >= 45 ? { text: '买卖对峙', cls: 'neutral' } : { text: '抛压较重', cls: 'down' });
-    const tickState = tickScore >= 60 ? { text: '抢着扫货', cls: 'up' } : (tickScore >= 45 ? { text: '买卖平衡', cls: 'neutral' } : { text: '资金出逃', cls: 'down' });
+    const depthState = isHkCode
+      ? { text: '公开源未开放', cls: 'neutral' }
+      : (depthScore >= 60 ? { text: '托底扎实', cls: 'up' } : (depthScore >= 45 ? { text: '买卖对峙', cls: 'neutral' } : { text: '抛压较重', cls: 'down' }));
+    const tickState = isHkCode
+      ? { text: '公开源未开放', cls: 'neutral' }
+      : (tickScore >= 60 ? { text: '抢着扫货', cls: 'up' } : (tickScore >= 45 ? { text: '买卖平衡', cls: 'neutral' } : { text: '资金出逃', cls: 'down' }));
 
     let hintVwap = '在成本线上·安全';
     if (biasPct >= 2.5) hintVwap = '涨得太急·易回落';
@@ -3894,13 +3929,17 @@ const QuantCompassEngine = (function() {
     else if (volRatio >= 1.5) hintVol = '明显放量·较活跃';
     else if (volRatio < 0.8) hintVol = '缩量平淡·换手低';
 
-    let hintImbalance = '买卖挂单差不多';
-    if (imbalance >= 20) hintImbalance = '想买的挂单更多';
-    else if (imbalance <= -20) hintImbalance = '想卖的抛压更大';
+    let hintImbalance = isHkCode ? '港股公开源无挂单量' : '买卖挂单差不多';
+    if (!isHkCode) {
+      if (imbalance >= 20) hintImbalance = '想买的挂单更多';
+      else if (imbalance <= -20) hintImbalance = '想卖的抛压更大';
+    }
 
-    let hintBuy = '买卖平稳换手';
-    if (buyRatio >= 55) hintBuy = '买方主动往上抢';
-    else if (buyRatio <= 45) hintBuy = '卖方主动往下砸';
+    let hintBuy = isHkCode ? '港股公开源无内外盘' : '买卖平稳换手';
+    if (!isHkCode) {
+      if (buyRatio >= 55) hintBuy = '买方主动往上抢';
+      else if (buyRatio <= 45) hintBuy = '卖方主动往下砸';
+    }
 
     const isA = /^sh|^sz|^bj/.test(code);
     const decimals = q.decimals || (isA ? 2 : 3);
@@ -5025,14 +5064,14 @@ const AnomalyRadarEngine = (function() {
     }
 
     // 规则 6：主力爆量进攻 (75)
-    if (volRatio >= 2.2 && buyRatio >= 60 && price >= vwap) {
+    if (volRatio >= 2.2 && (isA ? buyRatio >= 60 : changePct >= 1.5) && price >= vwap) {
       anomalies.push({
         code: item.code,
         name: name,
         type: '爆量主攻',
         level: 'bull',
         priority: 75,
-        text: '实时量比 ' + volRatio.toFixed(1) + 'x 爆量突增，外盘主买达 ' + buyRatio + '%，资金主动扫盘',
+        text: '实时量比 ' + volRatio.toFixed(1) + 'x 爆量突增' + (isA ? ('，外盘主买达 ' + buyRatio + '%') : '') + '，资金顺势拉升',
         action: '顺势跟进'
       });
     }
@@ -5480,9 +5519,13 @@ const VolumeCycleEngine = (function() {
   async function fetchDailyKline(code, days = 35) {
     const todayStr = getBeijingDate().toISOString().slice(0, 10);
     const storageKey = 'ding_kline_' + code + '_' + todayStr;
+    const isTrading = isMarketTrading(code);
+    const maxTtl = isTrading ? 300000 : 14400000; // 盘中 5 分钟滑动过期，盘后 4 小时
 
     if (cache[code] && cache[code].date === todayStr && cache[code].kline && cache[code].kline.length >= 10) {
-      return cache[code];
+      if (!isTrading || (Date.now() - (cache[code].ts || 0) < maxTtl)) {
+        return cache[code];
+      }
     }
 
     try {
@@ -5490,8 +5533,10 @@ const VolumeCycleEngine = (function() {
       if (localStr) {
         const parsed = JSON.parse(localStr);
         if (parsed && Array.isArray(parsed.kline) && parsed.kline.length >= 10) {
-          cache[code] = parsed;
-          return parsed;
+          if (!isTrading || (Date.now() - (parsed.ts || 0) < maxTtl)) {
+            cache[code] = parsed;
+            return parsed;
+          }
         }
       }
     } catch (e) {}
@@ -5755,7 +5800,7 @@ const VolumeCycleEngine = (function() {
       if (hsiData && hsiData.kline && hsiData.kline.length >= 5) {
         const qHk = quotes['hkHSI'] || quotes['r_hkHSI'];
         const todayVol = (qHk && qHk.vol > 0) ? qHk.vol : hsiData.lastVol;
-        const todayAmt = (qHk && qHk.amt > 0) ? (qHk.amt * 10000) : hsiData.lastVol;
+        const todayAmt = (qHk && qHk.amt > 0) ? qHk.amt : 0;
         const ma20Vol = hsiData.ma20Vol || 1;
         const volRatio = todayVol / ma20Vol;
         const biasPct = ((volRatio - 1) * 100);
@@ -6672,6 +6717,7 @@ function saveEditModal() {
   updateGlobalStatus();
   renderTable();
   if (selectedId === it.id) renderSelectedChart();
+  pollCycle();
   toast('已更新监控目标并重新开始监控');
 }
 
@@ -7102,12 +7148,42 @@ function checkMarketAwake() {
   }
 }
 
+function getOrCreateHeartbeatWorker() {
+  if (heartbeatWorker) return heartbeatWorker;
+  if (typeof window !== 'undefined' && window.Worker && typeof Blob !== 'undefined') {
+    try {
+      const code = 'let t = null;' +
+        'self.onmessage = function(e) {' +
+          'if (t) { clearInterval(t); t = null; }' +
+          'var ms = e.data && e.data.interval;' +
+          'if (ms > 0) {' +
+            't = setInterval(function() { self.postMessage("pulse"); }, ms);' +
+          '}' +
+        '};';
+      const blob = new Blob([code], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
+      heartbeatWorker = new Worker(url);
+      heartbeatWorker.onmessage = function() {
+        pollCycle();
+      };
+      return heartbeatWorker;
+    } catch (e) {
+      heartbeatWorker = null;
+    }
+  }
+  return null;
+}
+
 function restartTimer() {
   clearInterval(timer);
   timer = null;
   if (preciseWakeTimer) {
     clearTimeout(preciseWakeTimer);
     preciseWakeTimer = null;
+  }
+  const worker = getOrCreateHeartbeatWorker();
+  if (worker) {
+    worker.postMessage({ interval: 0 });
   }
 
   if (!monitors.length) return;
@@ -7117,9 +7193,17 @@ function restartTimer() {
   isThrottling = mState !== 'trading';
 
   if (mState === 'trading') {
-    timer = setInterval(pollCycle, refreshInterval);
+    if (worker) {
+      worker.postMessage({ interval: refreshInterval });
+    } else {
+      timer = setInterval(pollCycle, refreshInterval);
+    }
   } else if (mState === 'midday') {
-    timer = setInterval(pollCycle, 60000);
+    if (worker) {
+      worker.postMessage({ interval: 60000 });
+    } else {
+      timer = setInterval(pollCycle, 60000);
+    }
   } else {
     // closed 状态：全天收盘闭市或周末，深度休眠
     // 1. 每 60 秒本地巡检时钟（兜底应对系统休眠或时间跳变）
